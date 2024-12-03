@@ -1,5 +1,3 @@
-#pragma once
-#include <iostream>
 namespace str {
 
 	const static unsigned short int MAX_SIZE_OF_STRING = 6e4;
@@ -10,7 +8,6 @@ namespace str {
 		unsigned short int size = 0;
 		while (!nullPtrReceived((string + size))) size++;
 		return size;
-		//Test Commit
 	}
 	
 	bool isDigit(char x) {
