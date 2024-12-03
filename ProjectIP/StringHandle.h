@@ -9,7 +9,8 @@ namespace str {
 	unsigned short int sizeOfString(char* string) {
 		unsigned short int size = 0;
 		while (!nullPtrReceived((string + size))) size++;
-		return size; 
+		return size;
+		//Test Commit
 	}
 	
 	bool isDigit(char x) {
