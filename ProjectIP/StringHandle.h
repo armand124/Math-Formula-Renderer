@@ -13,5 +13,4 @@ namespace str {
 	bool isDigit(char x) {
 		return int(x - '0') >= 0 && int(x - '0') <= 9;
 	}
-
 }
