@@ -153,7 +153,7 @@ class Gui {
 								warningMessage.setString("Formula este gresita!");
 						}
 					}
-
+					//comment
 					window.clear();
 					window.draw(inputBoxFrame);
 					window.draw(warningMessage);
