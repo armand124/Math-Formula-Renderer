@@ -19,7 +19,7 @@ class Gui {
 		std::string applicationTitle;
 		sf::RenderWindow window;
 		sf::Event event;
-
+		bool startScreen = true;
 		class Components {
 		public:
 			sf::Font mathFont;
@@ -82,67 +82,84 @@ class Gui {
 			warningMessage.setFillColor(sf::Color::Red);
 			warningMessage.setPosition(warningMessage.getGlobalBounds().width, 0);
 			warningMessage.setString("");
-
+			str::Parser pars;
 			bool startedTyping = false;
 			bool warning = false;
 			inputBoxText.setString("Scrie formula");
 
+
+			//Welcome screen
+			sf::Text welcomeMessage;
+			welcomeMessage.setCharacterSize((HEIGHT * 0.07 * 0.40));
+			welcomeMessage.setFillColor(sf::Color::White);
+			welcomeMessage.setPosition(WIDTH*0.21, HEIGHT * 0.815);
+
 			while (window.isOpen())
 			{
-				while (window.pollEvent(event))
+				if (startScreen)
 				{
-					if (event.type == sf::Event::Closed)
-						window.close();
-					if (event.type == sf::Event::TextEntered)
-					{
-						if (event.text.unicode == 13 || event.text.unicode == 9 || event.text.unicode == 27)
-							continue;
-						if (!startedTyping)
-						{
-							startedTyping = 1;
-							inputBoxText.setString("");
-						}
-						if (event.text.unicode==8 && !inputString.empty())
-						{
-							inputString.pop_back();
-							inputBoxText.setString(inputString);
-							if (warning)
-								warning = 0;
-						}
-						else if(event.text.unicode !=8 && !warning){
-							inputString += event.text.unicode;
-							inputBoxText.setString(inputString);
-						}
-						if (inputBoxText.getGlobalBounds().width >= WIDTH * 0.59) {
-							char lastChar = inputString.back();
-							inputString.pop_back();
-							inputString.push_back('\n');
-							inputString.push_back(lastChar);
-							inputBoxText.setString(inputString);
-						}
-						if (inputBoxText.getGlobalBounds().height >= HEIGHT * 0.185)
-						{
-							warningMessage.setString("Expresia este prea lunga");
-							warningMessage.setPosition((WIDTH- warningMessage.getGlobalBounds().width)*0.5, 0);
-							inputString.pop_back();
-							inputBoxText.setString(inputString);
-							
-							warning = true;
-							
-						}
-						else if(!warning){
-							inputBoxFrame.setSize(sf::Vector2f(0.6 * WIDTH, max(0.07 * 0.8 * HEIGHT, 0.07 * 0.4 * HEIGHT + inputBoxText.getGlobalBounds().height)));
-							warningMessage.setString("");
-							
-						}
 
-					}
+					window.clear();
+					window.display();
 				}
-				window.clear();
-				window.draw(inputBoxFrame);
-				window.draw(warningMessage);
-				window.draw(inputBoxText);
-				window.display();
+				else {
+					while (window.pollEvent(event))
+					{
+						if (event.type == sf::Event::Closed)
+							window.close();
+						if (event.type == sf::Event::TextEntered)
+						{
+							if (event.text.unicode == 13 || event.text.unicode == 9 || event.text.unicode == 27)
+								continue;
+							if (!startedTyping)
+							{
+								startedTyping = 1;
+								inputBoxText.setString("");
+							}
+							if (event.text.unicode == 8 && !inputString.empty())
+							{
+								inputString.pop_back();
+								inputBoxText.setString(inputString);
+								if (warning)
+									warning = 0;
+							}
+							else if (event.text.unicode != 8 && !warning) {
+								inputString += event.text.unicode;
+								inputBoxText.setString(inputString);
+							}
+							if (inputBoxText.getGlobalBounds().width >= WIDTH * 0.59) {
+								char lastChar = inputString.back();
+								inputString.pop_back();
+								inputString.push_back('\n');
+								inputString.push_back(lastChar);
+								inputBoxText.setString(inputString);
+							}
+							if (inputBoxText.getGlobalBounds().height >= HEIGHT * 0.185)
+							{
+								warningMessage.setString("Expresia este prea lunga");
+								warningMessage.setPosition((WIDTH - warningMessage.getGlobalBounds().width) * 0.5, 0);
+								inputString.pop_back();
+								inputBoxText.setString(inputString);
+
+								warning = true;
+
+							}
+							else if (!warning) {
+								inputBoxFrame.setSize(sf::Vector2f(0.6 * WIDTH, max(0.07 * 0.8 * HEIGHT, 0.07 * 0.4 * HEIGHT + inputBoxText.getGlobalBounds().height)));
+								warningMessage.setString("");
+
+							}
+							if (!pars.isStringValid(inputString))
+								warningMessage.setString("Formula este gresita!");
+						}
+					}
+
+					window.clear();
+					window.draw(inputBoxFrame);
+					window.draw(warningMessage);
+					window.draw(inputBoxText);
+					window.display();
+				}
 			}
 		}
 };
@@ -151,5 +168,4 @@ int main()
 {
 	Gui app("Miawer",1000,1000);
 	app.run();
-	
 }
