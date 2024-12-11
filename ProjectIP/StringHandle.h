@@ -1,4 +1,4 @@
-#include <string>
+﻿#include <string>
 #include <stack>
 namespace str {
 	class Parser {
@@ -7,6 +7,8 @@ namespace str {
 		std::string functions[20] = { "ln","sqrt","cos","sin","tg",
 			"ctg","arcsin","arccos","arctg","arcctg" };
 	public:
+		
+
 		bool isOperator(char x)
 		{
 			return (x == '+') || (x == '-') || (x == '*') || (x == '/') || (x == '^');
@@ -19,6 +21,31 @@ namespace str {
 		{
 			return isLit(x) || isOperator(x) || x == '(' || x == ')';
 		}
+		std::string formulaParsedString(std::string s)
+		{
+			std::string formula;
+			for (int i = 0;i < s.size();i++)
+			{
+				if (s[i] != ' ')
+				{
+					if (s[i] == '*') {
+						formula.push_back(' ');
+						formula.push_back(char(183));
+						formula.push_back(' ');
+					}
+					else if (isOperator(s[i]))
+					{
+						formula.push_back(' ');
+						formula.push_back(s[i]);
+						formula.push_back(' ');
+					}
+					else
+						formula.push_back(s[i]);
+				}
+			}
+			return formula;
+		}
+		
 		bool isStringValid(std::string s)
 		{
 			std::string newS;
@@ -26,10 +53,12 @@ namespace str {
 			for (int i = 0;i < s.size();i++)
 				if (s[i] != ' ') newS.push_back(s[i]);
 			int i = 0;
-			if (isOperator(newS[0]) || newS[0]==')')
+			if (isOperator(newS[0]) || newS[0]==')' || newS[0]==',' || newS[0] == ';' || newS[0]=='_')
 				return false;
 			if (newS[0] == '(')
 				st.push('(');
+			if (isOperator(newS[newS.size() - 1]))
+				return false;
 			if (isLit(newS[0]))
 			{
 				std::string form;
@@ -64,10 +93,10 @@ namespace str {
 				i = 1;
 			while (i < newS.size())
 			{
-				if (isOperator(newS[i]) && isOperator(newS[i - 1]))
-					return false;
-				if (isOperator(newS[i]) && newS[i - 1] == '(')
-					return false;
+				if (newS[i] == '_' || newS[i] == ';')return false;
+				if (isOperator(newS[i]) && isOperator(newS[i - 1]))return false;
+				if (isOperator(newS[i]) && newS[i - 1] == '(')return false;
+				if (newS[i] == ',' && !isdigit(newS[i - 1]))return false;
 				if (isLit(newS[i]))
 				{
 					if (!isOperator(newS[i - 1]) && newS[i-1]!='(')
