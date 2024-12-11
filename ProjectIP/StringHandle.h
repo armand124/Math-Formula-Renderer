@@ -7,7 +7,7 @@ namespace str {
 		std::string functions[20] = { "ln","sqrt","cos","sin","tg",
 			"ctg","arcsin","arccos","arctg","arcctg" };
 	public:
-		
+
 
 		bool isOperator(char x)
 		{
@@ -45,7 +45,7 @@ namespace str {
 			}
 			return formula;
 		}
-		
+
 		bool isStringValid(std::string s)
 		{
 			std::string newS;
@@ -53,7 +53,7 @@ namespace str {
 			for (int i = 0;i < s.size();i++)
 				if (s[i] != ' ') newS.push_back(s[i]);
 			int i = 0;
-			if (isOperator(newS[0]) || newS[0]==')' || newS[0]==',' || newS[0] == ';' || newS[0]=='_')
+			if (isOperator(newS[0]) || newS[0] == ')' || newS[0] == ',' || newS[0] == ';' || newS[0] == '_')
 				return false;
 			if (newS[0] == '(')
 				st.push('(');
@@ -99,7 +99,7 @@ namespace str {
 				if (newS[i] == ',' && !isdigit(newS[i - 1]))return false;
 				if (isLit(newS[i]))
 				{
-					if (!isOperator(newS[i - 1]) && newS[i-1]!='(')
+					if (!isOperator(newS[i - 1]) && newS[i - 1] != '(')
 						return false;
 					std::string form;
 					while (isLit(newS[i]))
@@ -130,7 +130,7 @@ namespace str {
 					}
 				}
 				if (newS[i] == '(') {
-					if (!isOperator(newS[i - 1]) && !isLit(newS[i-1]))
+					if (!isOperator(newS[i - 1]) && !isLit(newS[i - 1]))
 					{
 						return false;
 					}
