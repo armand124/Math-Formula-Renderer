@@ -33,6 +33,11 @@ namespace str {
 						formula.push_back(char(183));
 						formula.push_back(' ');
 					}
+					else if (s[i] == '^')
+					{
+						formula.push_back('^');
+						formula.push_back(' ');
+					}
 					else if (isOperator(s[i]))
 					{
 						formula.push_back(' ');

@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Formula.cpp" />
     <ClCompile Include="Frame.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="ProjectIP.cpp" />
