@@ -18,6 +18,7 @@ struct formulaTree {
 	float xPosOfOperator, yPosOfOperator;
 	float lengthOfDivision, xPosOfFormulaEnd;
 	float minHeightParantheses, maxHeightParantheses;
+	float xPosOfParentheses;
 	formulaTree()
 	{
 		leftTree = NULL, rightTree = NULL;
@@ -28,7 +29,7 @@ struct formulaTree {
 		xPosOfOperator = 0;
 		yPosOfOperator = 0;
 		lengthOfDivision = 0;
-		xPosOfFormulaEnd = 0;
+		xPosOfFormulaEnd = xPosOfParentheses= 0;
 		minHeightParantheses = 0, maxHeightParantheses = 0;
 	}
 };
@@ -166,18 +167,17 @@ sf::Text operatorToText(char op, float x, float y)
 	txt.setPosition(x, y);
 	return txt;
 }
-float calculateHeightPosition(formulaTree* node)
-{
-	if (node->minHeightParantheses == 0 && node->maxHeightParantheses == 0)
-	{
-		return node->yPosOfFormula;
-	}
-	return (node->minHeightParantheses + node->maxHeightParantheses) * 0.5f - std::abs(node->minHeightParantheses - node->maxHeightParantheses);
-}
 float optimalFontSize(formulaTree* node)
 {
-	return std::max(float(28), float(28) + std::abs(node->minHeightParantheses - node->maxHeightParantheses));
+	return float(std::max(float(28), float(28) + std::abs(node->minHeightParantheses - node->maxHeightParantheses)));
 }
+float calculateHeightPosition(formulaTree* node)
+{
+	return ((node->maxHeightParantheses + node->minHeightParantheses) - 
+		std::abs(node->minHeightParantheses - node->maxHeightParantheses) -
+		getDrawableParantheses("(",0,0,optimalFontSize(node)).getLocalBounds().height)* 0.5f;
+}
+
 void buildFormulaCoords(formulaTree* node, float& xPos, float yPos, float& maximumHeight, float& minimumHeight)
 {					
 	if (node == NULL) return;
@@ -195,16 +195,16 @@ void buildFormulaCoords(formulaTree* node, float& xPos, float yPos, float& maxim
 	if (node->operation == '/') {
 		float xAxisDifferenceUp, xAxisDifferenceDown;
 		xAxisDifferenceUp = xAxisDifferenceDown = xPos;
-		
+
 		node->yPosOfFormula = yPos;
 		node->xPosOfFormula = xPos;
-
+		
 		xPos += 10;
 		float savedX = xPos;
 		float savedMinimumHeight = yPos;
 		minimumHeight = 10000;
 		maximumHeight = -1;
-		buildFormulaCoords(node->leftTree, xPos, yPos - 22,maximumHeight,minimumHeight);
+		buildFormulaCoords(node->leftTree, xPos, yPos - 22, maximumHeight, minimumHeight);
 		if (node->hasParentheses) node->minHeightParantheses = minimumHeight;
 		xAxisDifferenceUp = std::abs(xPos - savedX);
 
@@ -213,64 +213,100 @@ void buildFormulaCoords(formulaTree* node, float& xPos, float yPos, float& maxim
 
 		minimumHeight = 10000;
 		maximumHeight = -1;
-		
 
-		buildFormulaCoords(node->rightTree, xPos, yPos + 22,maximumHeight, minimumHeight);
-		if(node->hasParentheses) node->maxHeightParantheses = maximumHeight;
+
+		buildFormulaCoords(node->rightTree, xPos, yPos + 22, maximumHeight, minimumHeight);
+		if (node->hasParentheses) node->maxHeightParantheses = maximumHeight;
 		xAxisDifferenceDown = std::abs(xPos - savedX);
 		float minHeight = minimumHeight;
-		float diffInAxis = std::max(xAxisDifferenceDown,xAxisDifferenceUp);
+		float diffInAxis = std::max(xAxisDifferenceDown, xAxisDifferenceUp);
 		node->lengthOfDivision = diffInAxis;
 		node->xPosOfOperator = savedX;
-		node->yPosOfOperator = yPos+20;
+		node->xPosOfParentheses = savedX;
+		node->yPosOfOperator = yPos + 20;
 		node->xPosOfFormulaEnd = savedX + getDrawableParantheses(")", node->xPosOfFormula, calculateHeightPosition(node),
 			optimalFontSize(node)).getLocalBounds().width + diffInAxis + 10;
 		node->xPosOfOperator = savedX + getDrawableParantheses("(", node->xPosOfFormula, calculateHeightPosition(node),
 			optimalFontSize(node)).getLocalBounds().width;
+
 		xPos = (savedX + getDrawableParantheses("(", node->xPosOfFormula, calculateHeightPosition(node),
 			optimalFontSize(node)).getLocalBounds().width + static_cast<float>(std::abs(xAxisDifferenceUp - diffInAxis)) * 0.5f);
 		minimumHeight = 10000;
 		maximumHeight = -1;
-		
-		buildFormulaCoords(node->leftTree,xPos,yPos - 22 - std::abs(yPos - maxHeight), maximumHeight, minimumHeight);
+	
+		buildFormulaCoords(node->leftTree, xPos, yPos - 22 - std::abs(yPos - maxHeight), maximumHeight, minimumHeight);
 
 		xPos = (node->xPosOfOperator + static_cast<float>(std::abs(xAxisDifferenceDown - diffInAxis)) * 0.5f);
-		
-		buildFormulaCoords(node->rightTree, xPos, yPos + 22  + std::abs(yPos + 42 - minHeight), maximumHeight, minimumHeight);
-		
+
+		buildFormulaCoords(node->rightTree, xPos, yPos + 22 + std::max(0.0f,(yPos + 42 - minHeight)), maximumHeight, minimumHeight);
+		if (node->hasParentheses) xPos += getDrawableParantheses(")", node->xPosOfFormula, calculateHeightPosition(node),
+			optimalFontSize(node)).getLocalBounds().width;
 		return;
 	}
 	if (node->operation == '^')
 	{
+		
 		buildFormulaCoords(node->leftTree, xPos, yPos, maximumHeight, minimumHeight);
+		
 		maximumHeight = -1;
 		xPos+=10;
 		float savedXPos = xPos;
-		buildFormulaCoords(node->rightTree, xPos, yPos - 22, maximumHeight, minimumHeight);
-		buildFormulaCoords(node->rightTree, savedXPos, yPos - 22 - std::abs(yPos - 22 - maximumHeight), maximumHeight, minimumHeight);
+		buildFormulaCoords(node->rightTree, xPos, yPos - 5, maximumHeight, minimumHeight);
+		
+		buildFormulaCoords(node->rightTree, savedXPos, yPos - 5 - std::max(float(0),maximumHeight-(yPos-5)), maximumHeight, minimumHeight);
+		if (node->rightTree->hasParentheses) {
+			node->maxHeightParantheses = maximumHeight;
+			node->minHeightParantheses = minimumHeight;
+		}
 		return;
 	}
 
 	node->xPosOfFormula = xPos;
-	if(node->hasParentheses) xPos += operatorToText('(', xPos, yPos).getLocalBounds().width;
-	xPos += 5;
+	float maxH = -1, minH = 100000;
+
+	xPos = node->xPosOfFormula;
 	buildFormulaCoords(node->leftTree, xPos, yPos, maximumHeight, minimumHeight);
+	maxH = maximumHeight; minH = minimumHeight;
+	xPos += 10;
+	node->xPosOfOperator = xPos;
+	node->yPosOfOperator = yPos;
+	xPos = xPos + operatorToText(node->operation, xPos, yPos).getLocalBounds().width;
+	xPos += 10;
+	minimumHeight = 10000;
+	maximumHeight = -1;
 	
+	buildFormulaCoords(node->rightTree, xPos, yPos, maximumHeight, minimumHeight);
+	maxH = std::max(maxH, maximumHeight);
+	minH = std::min(minH, minimumHeight);
+	xPos = node->xPosOfFormula;
+	node->maxHeightParantheses = maxH; node->minHeightParantheses = minH;
+	node->xPosOfParentheses = xPos;
+	if (node->hasParentheses) xPos = xPos + getDrawableParantheses("(", node->xPosOfParentheses, calculateHeightPosition(node),
+		optimalFontSize(node)).getLocalBounds().width;
+	node->xPosOfFormula = xPos;
+	minimumHeight = 10000;
+	maximumHeight = -1;
+	xPos += 5;
+	
+	buildFormulaCoords(node->leftTree, xPos, yPos, maximumHeight, minimumHeight);
 	xPos += 10;
 	node->xPosOfOperator = xPos;
 	node->yPosOfOperator = yPos;
 	xPos = xPos + operatorToText(node->operation, xPos, yPos).getLocalBounds().width;
 	xPos += 10;
 
-
-	minimumHeight = 10000;
-	maximumHeight = -1;
 	
 	buildFormulaCoords(node->rightTree, xPos, yPos, maximumHeight, minimumHeight);
 	
-	node->xPosOfFormulaEnd = xPos+5;
+
+
+	node->xPosOfFormulaEnd = xPos;
+
 	node->yPosOfFormula = yPos;
-	if (node->hasParentheses) xPos += operatorToText(')', xPos, yPos).getLocalBounds().width;
+
+	if (node->hasParentheses) xPos += getDrawableParantheses(")", node->xPosOfFormula, calculateHeightPosition(node),
+		optimalFontSize(node)).getLocalBounds().width;
+
 	return;
 }
 
@@ -278,7 +314,7 @@ void drawFormula(formulaTree* node)
 {
 	if (node == NULL) return;
 	if (isLeaf(node)) { window.draw(getDrawableFormula(node->treeFormula, node->xPosOfFormula, node->yPosOfFormula)); return; }
-	if (node->hasParentheses) window.draw(getDrawableParantheses("(", node->xPosOfFormula,  calculateHeightPosition(node),
+	if (node->hasParentheses) window.draw(getDrawableParantheses("(", node->xPosOfParentheses ,  calculateHeightPosition(node),
 		optimalFontSize(node)));
 	drawFormula(node->leftTree);
 	if (node->operation != '/' && node->operation != '^') {
@@ -299,8 +335,9 @@ int main()
 {
 	if (!mathFont.loadFromFile("assets/math_font.otf")) { exit(1); }
 	
-	std::string input = "";
+	std::string input = "(x+y+1/2/3/4/5)/(1/2+y-x)";
 	formulaTree* root = buildFormulaTree(input);
+
 	float test = 100;
 	float minH = 1000, maxH = 0;
 	buildFormulaCoords(root,test,600,maxH,minH);
