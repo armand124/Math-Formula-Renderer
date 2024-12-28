@@ -4,16 +4,16 @@
 #include <stack>
 #include "StringHandle.h"
 
-sf::Font mathFont;
+sf::Font mathFont, parFont;
 sf::RenderWindow window(sf::VideoMode(1200, 1200), "Vizualizator formule");
-
-float characterSize = 20;
-float spacing = characterSize*0.25f;
+float characterSize = 26;
+float spacing = characterSize * 0.25f;
 struct formulaTree {
 	char operation;
 	bool paranthases;
 	std::string formula;
 	formulaTree* leftTree, * rightTree;
+	
 	formulaTree(std::string treeForm) {
 		leftTree = NULL;
 		rightTree = NULL;
@@ -27,10 +27,10 @@ struct formulaTree {
 	} position;
 
 	struct size {
-		float width  = 0;
+		float width = 0;
 		float height = 0;
 	} size;
-	
+
 	struct height {
 		float down = 0;
 		float up = 0;
@@ -192,7 +192,7 @@ void buildFormulaCoordinates(formulaTree* node, float heightPos, float& widthPos
 		widthPos += getWidthOfString(node->formula);
 		return;
 	}
-	
+
 	if (node->operation == '/')
 	{
 
@@ -202,9 +202,9 @@ void buildFormulaCoordinates(formulaTree* node, float heightPos, float& widthPos
 		widthPos = saveWidthPos;
 		buildFormulaCoordinates(node->rightTree, heightPos + 0.7f * characterSize, widthPos);
 		widthPos = saveWidthPos;
-		
+
 		//Rebuild the position with correct settling
-	
+
 		widthPos += (std::max(node->leftTree->size.width, node->rightTree->size.width) - node->leftTree->size.width) * 0.5f;
 		buildFormulaCoordinates(node->leftTree, (heightPos - 0.7f * characterSize) * 2 - node->leftTree->height.down, widthPos);
 
@@ -228,17 +228,17 @@ void buildFormulaCoordinates(formulaTree* node, float heightPos, float& widthPos
 
 		buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
 		float savedWidthPos = widthPos;
-		buildFormulaCoordinates(node->rightTree, heightPos - 0.6f * characterSize, widthPos);
+		buildFormulaCoordinates(node->rightTree, heightPos - 0.4f * characterSize, widthPos);
 		widthPos = savedWidthPos;
-		buildFormulaCoordinates(node->rightTree,  ( heightPos - 0.6f * characterSize) * 2 
-								- node->rightTree->height.down - node->leftTree->size.height, widthPos);
+		buildFormulaCoordinates(node->rightTree, (heightPos - 0.4f * characterSize) * 2
+			- node->rightTree->height.down - node->leftTree->size.height, widthPos);
 
 		node->height.up = node->rightTree->height.up;
 		node->height.down = node->leftTree->height.down;
 		node->size.width = node->leftTree->size.width + node->rightTree->size.width;
-		node->size.height = std::abs(node->height.down - node->height.up);
+		node->size.height = std::max(0.f,node->height.down - node->height.up);
 		return;
-		
+
 	}
 	else if (!node->paranthases)
 	{
@@ -263,17 +263,17 @@ void buildFormulaCoordinates(formulaTree* node, float heightPos, float& widthPos
 	else if (node->paranthases)
 	{
 		node->position.xOperator = widthPos;
-		
+
 
 		buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
-		
-		widthPos = node->position.xOperator + getWidthOfParantheses('(', node->leftTree->size.height)+spacing;
-		
+
+		widthPos = node->position.xOperator + getWidthOfParantheses('(', node->leftTree->size.height) + spacing;
+		std::cout << getWidthOfParantheses('(', node->leftTree->size.height) << '\n';
 		buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
 
-		node->position.yOperator = (node->leftTree->height.down + node->leftTree->height.up 
-								- std::abs(node->leftTree->height.down - node->leftTree->height.up)) * 0.5f
-								- (node->leftTree->size.height > 0 ? (getHeightOfParantheses('(', node->leftTree->size.height) * 0.25f) : 0);
+		node->position.yOperator = (node->leftTree->height.down + node->leftTree->height.up
+			- std::abs(node->leftTree->height.down - node->leftTree->height.up)) * 0.5f
+			- (node->leftTree->size.height > 0 ? (getHeightOfParantheses('(', node->leftTree->size.height) * 0.25f) : 0);
 
 		widthPos = widthPos + spacing + getWidthOfParantheses(')', node->leftTree->size.height);
 
@@ -306,12 +306,13 @@ void drawFormula(formulaTree* node)
 		text.setCharacterSize(characterSize + node->leftTree->size.height);
 		text.setFillColor(sf::Color::White);
 		text.setPosition(node->position.xOperator, node->position.yOperator);
-		text.setFont(mathFont);
+		text.setFont(parFont);
 		text.setString("(");
 		window.draw(text);
 		drawFormula(node->leftTree);
 		text.setString(")");
-		text.setPosition(node->position.xOperator + node->leftTree->size.width + characterSize, node->position.yOperator);
+		text.setPosition(node->position.xOperator + node->leftTree->size.width
+			+ getWidthOfParantheses(')',node->leftTree->size.height)*0.609 + int(characterSize*3/getWidthOfParantheses(')', node->leftTree->size.height)), node->position.yOperator);
 		window.draw(text);
 		return;
 	}
@@ -323,8 +324,8 @@ void drawFormula(formulaTree* node)
 	if (node->operation == '/')
 	{
 		drawFormula(node->leftTree);
-		sf::RectangleShape line(sf::Vector2f(node->size.width, characterSize*0.04f));
-		line.setPosition(node->position.xOperator,node->position.yOperator);
+		sf::RectangleShape line(sf::Vector2f(node->size.width, characterSize * 0.04f));
+		line.setPosition(node->position.xOperator, node->position.yOperator);
 		line.setFillColor(sf::Color::White);
 		window.draw(line);
 		drawFormula(node->rightTree);
@@ -342,16 +343,17 @@ void drawFormula(formulaTree* node)
 		window.draw(text);
 		drawFormula(node->rightTree);
 	}
-	
-	
+
+
 }
 int main()
 {
 	if (!mathFont.loadFromFile("assets/math_font.otf")) exit(1);
-	std::string str = "(3/(3+1/(3+1/2))+1/2)/(3-4/4+2,34283/(3,141/0,01/6/9/4/2/0))";
+	if (!parFont.loadFromFile("assets/fontParanteze.ttf")) exit(1);
+	std::string str = "";
 	formulaTree* root = buildTree(str);
 	float w = 50, h = 600;
-	buildFormulaCoordinates(root, h,w);
+	buildFormulaCoordinates(root, h, w);
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -366,4 +368,4 @@ int main()
 		window.display();
 	}
 
-} 
+}
