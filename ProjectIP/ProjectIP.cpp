@@ -3,345 +3,355 @@
 #include "SFML/Graphics.hpp"
 #include <stack>
 #include "StringHandle.h"
-#include <locale>
+
 sf::Font mathFont;
 sf::RenderWindow window(sf::VideoMode(1200, 1200), "Vizualizator formule");
 
+float characterSize = 20;
+float spacing = characterSize*0.25f;
 struct formulaTree {
-	formulaTree* leftTree;
-	formulaTree* rightTree;
-	bool hasParentheses;
-	std::string treeFormula;
-	std::string function;
 	char operation;
-	float xPosOfFormula, yPosOfFormula;
-	float xPosOfOperator, yPosOfOperator;
-	float lengthOfDivision, xPosOfFormulaEnd;
-	float minHeightParantheses, maxHeightParantheses;
-	float xPosOfParentheses;
-	formulaTree()
-	{
-		leftTree = NULL, rightTree = NULL;
-		hasParentheses = 0;
-		operation = ' ';
-		xPosOfFormula = 0;
-		yPosOfFormula = 0;
-		xPosOfOperator = 0;
-		yPosOfOperator = 0;
-		lengthOfDivision = 0;
-		xPosOfFormulaEnd = xPosOfParentheses= 0;
-		minHeightParantheses = 0, maxHeightParantheses = 0;
+	bool paranthases;
+	std::string formula;
+	formulaTree* leftTree, * rightTree;
+	formulaTree(std::string treeForm) {
+		leftTree = NULL;
+		rightTree = NULL;
+		paranthases = false;
+		operation = 0;
+		formula = treeForm;
 	}
+	struct position {
+		float xFormula = 0, yFormula = 0;
+		float xOperator = 0, yOperator = 0;
+	} position;
+
+	struct size {
+		float width  = 0;
+		float height = 0;
+	} size;
+	
+	struct height {
+		float down = 0;
+		float up = 0;
+	} height;
 };
 
-str::Parser stringParser;
-
-formulaTree* buildFormulaTree(std::string formula)
+bool isOnlyTerm(formulaTree* node) { return (node->leftTree == NULL && node->rightTree == NULL); }
+std::string deleteParantheses(std::string str)
 {
-	int plus_minus_index = -1;
-	int plus_minus_priority = 1e9;
+	str.pop_back();
+	return str.substr(1);
+}
 
-	int multiply_divide_index = -1;
-	int multiply_divide_priority = 1e9;
+formulaTree* buildTree(std::string formula)
+{
+	//Create new node of tree
+	formulaTree* node = new formulaTree(formula);
 
-	int power_index = -1;
-	int power_priority = 1e9;
+	//If it has paranthases then we eliminate them and go to the next node
+	if (formula[0] == '(' && formula[int(formula.size() - 1)] == ')')
+	{
+		std::stack<int>stk;
+		for (int i = 0; i < formula.size() - 1; i++)
+		{
+			if (formula[i] == '(')
+				stk.push(i);
+			if (formula[i] == ')')
+				stk.pop();
+		}
+		if (stk.top() == 0)
+		{
+			node->paranthases = true;
+			node->leftTree = buildTree(deleteParantheses(formula));
+			return node;
+		}
+	}
 
-	int currentPriority = 0;
-	int minimumGeneralPriority = 1e9;
+	//Check whats the lowest priority operation in the current string
+	int addSubIndex = -1, addSubPriority = 1e9;
+	int mulDivIndex = -1, mulDivPriority = 1e9;
+	int powIndex = -1, powPriority = 1e9;
 
+	int minimumPriority = 1e9, currentPriority = 0;
 
-	for (int i = 0; i <= static_cast<int>(formula.size()); i++)
+	for (int i = 0; i < formula.size(); i++)
 	{
 		if (formula[i] == '(') currentPriority++;
 		if (formula[i] == ')') currentPriority--;
-		if ((formula[i] == '+' || formula[i] == '-') && (plus_minus_priority > currentPriority))
+
+		if ((formula[i] == '+' || formula[i] == '-') && currentPriority < addSubPriority)
 		{
-			plus_minus_priority = currentPriority;
-			plus_minus_index = i;
+			addSubPriority = currentPriority;
+			addSubIndex = i;
 		}
-		if ((formula[i] == '*' || formula[i] == '/') && (multiply_divide_priority > currentPriority))
+
+		if ((formula[i] == '*' || formula[i] == '/') && currentPriority < mulDivPriority)
 		{
-			multiply_divide_priority = currentPriority;
-			multiply_divide_index = i;
+			mulDivPriority = currentPriority;
+			mulDivIndex = i;
 		}
-		if ((formula[i] == '^') && (power_priority > currentPriority))
+
+		if ((formula[i] == '^') && currentPriority < powPriority)
 		{
-			power_priority = currentPriority;
-			power_index = i;
+			powPriority = currentPriority;
+			powIndex = i;
 		}
-		if (stringParser.isOperator(formula[i])) minimumGeneralPriority = std::min(minimumGeneralPriority, currentPriority);
 	}
 
-	int operatorIndex = -1;
-
-	if (minimumGeneralPriority == plus_minus_priority) operatorIndex = plus_minus_index;
-	else if (minimumGeneralPriority == multiply_divide_priority) operatorIndex = multiply_divide_index;
-	else if (minimumGeneralPriority == power_priority) operatorIndex = power_index;
-
-	
-
-	formulaTree* node = new formulaTree();
-
-	if (operatorIndex == -1) {
-		node->treeFormula = formula;
-		node->leftTree = NULL;
-		node->rightTree = NULL;
+	//Check if there is at least an operator
+	if (addSubIndex == -1 && mulDivIndex == -1 && powIndex == -1)
 		return node;
-	}
-	
-	while (formula[0] == ' ')
-	{
-		formula = formula.substr(1);
-		operatorIndex--;
-	}
-	while (formula.back() == ' ')
-	{
-		formula.pop_back();
-	}
 
-	if (formula[0]=='(' && formula[formula.size()-1]==')')
-	{
-		std::stack<int>par;
-		int cnt = 0, ordin = 0;
-		for (int i = 0;i < static_cast<int>(formula.size());i++)
-		{
-			if (formula[i] == '(')
-				par.push(++ordin);
-			if (formula[i] == ')')
-			{
-				if (par.top() == 1)
-					cnt++;
-				ordin--;
-				par.pop();
-			}
-		}
-		if (cnt == 1) {
-			node->hasParentheses = 1;
-			formula.pop_back();
-			formula = formula.substr(1);
-			operatorIndex--;
-		}
-	}
-	
-	node->treeFormula = formula;
+	//Find which operator has the lowest priority and it's location
+	minimumPriority = std::min(std::min(addSubPriority, mulDivPriority), powPriority);
+
+	int operatorIndex = 0;
+
+	if (minimumPriority == addSubPriority) operatorIndex = addSubIndex;
+	else if (minimumPriority == mulDivPriority) operatorIndex = mulDivIndex;
+	else operatorIndex = powIndex;
+
+	//Break the current formula in two parts -> the left part of the operation and the right part
 	node->operation = formula[operatorIndex];
-	
-	node->leftTree = buildFormulaTree(formula.substr(0, operatorIndex));
-	node->rightTree = buildFormulaTree(formula.substr(operatorIndex + 1));
-
+	node->leftTree = buildTree(formula.substr(0, operatorIndex));
+	node->rightTree = buildTree(formula.substr(operatorIndex + 1));
 	return node;
 }
 
-bool isLeaf(formulaTree* node) { return (node->leftTree == NULL && node->rightTree == NULL); }
-
-sf::Text getDrawableFormula(std::string formula, float x, float y)
+float getWidthOfString(std::string str)
 {
-	sf::Text textFormula;
-	textFormula.setCharacterSize(32);
-	textFormula.setFont(mathFont);
-	textFormula.setFillColor(sf::Color::White);
-	textFormula.setString(formula);
-	textFormula.setPosition(x,y);
-	return textFormula;
-}
-sf::Text getDrawableParantheses(std::string formula, float x, float y, float fontSize)
-{
-	sf::Text textFormula;
-	textFormula.setCharacterSize(fontSize);
-	textFormula.setFont(mathFont);
-	textFormula.setFillColor(sf::Color::White);
-	textFormula.setString(formula);
-	textFormula.setPosition(x, y);
-	return textFormula;
-}
-sf::Text operatorToText(char op, float x, float y)
-{
-	std::string s;
-	s.push_back(op);
 	sf::Text txt;
-	txt.setCharacterSize(28);
 	txt.setFont(mathFont);
+	txt.setCharacterSize(characterSize);
 	txt.setFillColor(sf::Color::White);
-	txt.setString(s);
-	txt.setPosition(x, y);
-	return txt;
+	txt.setString(str);
+	txt.setPosition(0, 0);
+	return txt.getLocalBounds().width;
 }
-float optimalFontSize(formulaTree* node)
+float getHeightOfString(std::string str)
 {
-	return float(std::max(float(28), float(28) + std::abs(node->minHeightParantheses - node->maxHeightParantheses)));
+	sf::Text txt;
+	txt.setFont(mathFont);
+	txt.setCharacterSize(characterSize);
+	txt.setFillColor(sf::Color::White);
+	txt.setString(str);
+	txt.setPosition(0, 0);
+	return txt.getLocalBounds().height;
 }
-float calculateHeightPosition(formulaTree* node)
+float getWidthOfChar(char c)
 {
-	return ((node->maxHeightParantheses + node->minHeightParantheses) - 
-		std::abs(node->minHeightParantheses - node->maxHeightParantheses) -
-		getDrawableParantheses("(",0,0,optimalFontSize(node)).getLocalBounds().height)* 0.5f;
+	sf::Text txt;
+	std::string str;
+	str.push_back(c);
+	txt.setFont(mathFont);
+	txt.setCharacterSize(characterSize);
+	txt.setFillColor(sf::Color::White);
+	txt.setString(str);
+	txt.setPosition(0, 0);
+	return txt.getLocalBounds().width;
+}
+float getWidthOfParantheses(char p, float height)
+{
+	sf::Text txt;
+	std::string str;
+	str.push_back(p);
+	txt.setFont(mathFont);
+	txt.setCharacterSize(characterSize + height);
+	txt.setFillColor(sf::Color::White);
+	txt.setString(str);
+	txt.setPosition(0, 0);
+	return txt.getLocalBounds().width;
+}
+float getHeightOfParantheses(char p, float height)
+{
+	sf::Text txt;
+	std::string str;
+	str.push_back(p);
+	txt.setFont(mathFont);
+	txt.setCharacterSize(characterSize + height);
+	txt.setFillColor(sf::Color::White);
+	txt.setString(str);
+	txt.setPosition(0, 0);
+	return txt.getLocalBounds().height;
 }
 
-void buildFormulaCoords(formulaTree* node, float& xPos, float yPos, float& maximumHeight, float& minimumHeight)
-{					
+void buildFormulaCoordinates(formulaTree* node, float heightPos, float& widthPos)
+{
 	if (node == NULL) return;
 
-	if (isLeaf(node))
+	//Check if node is a leaf and mark the coordinates
+	if (isOnlyTerm(node))
 	{
-		node->xPosOfFormula = xPos;
-		node->yPosOfFormula = yPos;
-		xPos = xPos + getDrawableFormula(node->treeFormula, xPos, yPos).getLocalBounds().width;
-		maximumHeight = std::max(maximumHeight, yPos + getDrawableFormula(node->treeFormula, xPos, yPos).getLocalBounds().height);
-		minimumHeight = std::min(minimumHeight,yPos + getDrawableFormula(node->treeFormula, xPos, yPos).getLocalBounds().height);
+		node->position.xFormula = widthPos;
+		node->position.yFormula = heightPos;
+		node->height.up = heightPos;
+		node->height.down = heightPos;
+		node->size.width = getWidthOfString(node->formula);
+		node->size.height = getHeightOfString(node->formula);
+		widthPos += getWidthOfString(node->formula);
 		return;
 	}
 	
-	if (node->operation == '/') {
-		float xAxisDifferenceUp, xAxisDifferenceDown;
-		xAxisDifferenceUp = xAxisDifferenceDown = xPos;
+	if (node->operation == '/')
+	{
 
-		node->yPosOfFormula = yPos;
-		node->xPosOfFormula = xPos;
+		//Get height and width coordinates
+		float saveWidthPos = widthPos;
+		buildFormulaCoordinates(node->leftTree, heightPos - 0.7f * characterSize, widthPos);
+		widthPos = saveWidthPos;
+		buildFormulaCoordinates(node->rightTree, heightPos + 0.7f * characterSize, widthPos);
+		widthPos = saveWidthPos;
 		
-		xPos += 10;
-		float savedX = xPos;
-		float savedMinimumHeight = yPos;
-		minimumHeight = 10000;
-		maximumHeight = -1;
-		buildFormulaCoords(node->leftTree, xPos, yPos - 22, maximumHeight, minimumHeight);
-		if (node->hasParentheses) node->minHeightParantheses = minimumHeight;
-		xAxisDifferenceUp = std::abs(xPos - savedX);
-
-		xPos = savedX;
-		float maxHeight = maximumHeight;
-
-		minimumHeight = 10000;
-		maximumHeight = -1;
-
-
-		buildFormulaCoords(node->rightTree, xPos, yPos + 22, maximumHeight, minimumHeight);
-		if (node->hasParentheses) node->maxHeightParantheses = maximumHeight;
-		xAxisDifferenceDown = std::abs(xPos - savedX);
-		float minHeight = minimumHeight;
-		float diffInAxis = std::max(xAxisDifferenceDown, xAxisDifferenceUp);
-		node->lengthOfDivision = diffInAxis;
-		node->xPosOfOperator = savedX;
-		node->xPosOfParentheses = savedX;
-		node->yPosOfOperator = yPos + 20;
-		node->xPosOfFormulaEnd = savedX + getDrawableParantheses(")", node->xPosOfFormula, calculateHeightPosition(node),
-			optimalFontSize(node)).getLocalBounds().width + diffInAxis + 10;
-		node->xPosOfOperator = savedX + getDrawableParantheses("(", node->xPosOfFormula, calculateHeightPosition(node),
-			optimalFontSize(node)).getLocalBounds().width;
-
-		xPos = (savedX + getDrawableParantheses("(", node->xPosOfFormula, calculateHeightPosition(node),
-			optimalFontSize(node)).getLocalBounds().width + static_cast<float>(std::abs(xAxisDifferenceUp - diffInAxis)) * 0.5f);
-		minimumHeight = 10000;
-		maximumHeight = -1;
+		//Rebuild the position with correct settling
 	
-		buildFormulaCoords(node->leftTree, xPos, yPos - 22 - std::abs(yPos - maxHeight), maximumHeight, minimumHeight);
+		widthPos += (std::max(node->leftTree->size.width, node->rightTree->size.width) - node->leftTree->size.width) * 0.5f;
+		buildFormulaCoordinates(node->leftTree, (heightPos - 0.7f * characterSize) * 2 - node->leftTree->height.down, widthPos);
 
-		xPos = (node->xPosOfOperator + static_cast<float>(std::abs(xAxisDifferenceDown - diffInAxis)) * 0.5f);
+		widthPos = saveWidthPos + (std::max(node->leftTree->size.width, node->rightTree->size.width) - node->rightTree->size.width) * 0.5f;
+		buildFormulaCoordinates(node->rightTree, (heightPos + 0.7f * characterSize) * 2 - node->rightTree->height.up, widthPos);
 
-		buildFormulaCoords(node->rightTree, xPos, yPos + 22 + std::max(0.0f,(yPos + 42 - minHeight)), maximumHeight, minimumHeight);
-		if (node->hasParentheses) xPos += getDrawableParantheses(")", node->xPosOfFormula, calculateHeightPosition(node),
-			optimalFontSize(node)).getLocalBounds().width;
+		node->height.up = node->leftTree->height.up;
+		node->height.down = node->rightTree->height.down;
+		node->size.width = std::max(node->leftTree->size.width, node->rightTree->size.width);
+		node->size.height = std::abs(node->height.down - node->height.up);
+
+		node->position.xOperator = saveWidthPos;
+		node->position.yOperator = heightPos + 0.7f * characterSize;
+
+		//Reset position after fraction
+		widthPos = saveWidthPos + std::max(node->leftTree->size.width, node->rightTree->size.width);
+		return;
+	}
+	else if (node->operation == '^')
+	{
+
+		buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
+		float savedWidthPos = widthPos;
+		buildFormulaCoordinates(node->rightTree, heightPos - 0.6f * characterSize, widthPos);
+		widthPos = savedWidthPos;
+		buildFormulaCoordinates(node->rightTree,  ( heightPos - 0.6f * characterSize) * 2 
+								- node->rightTree->height.down - node->leftTree->size.height, widthPos);
+
+		node->height.up = node->rightTree->height.up;
+		node->height.down = node->leftTree->height.down;
+		node->size.width = node->leftTree->size.width + node->rightTree->size.width;
+		node->size.height = std::abs(node->height.down - node->height.up);
+		return;
+		
+	}
+	else if (!node->paranthases)
+	{
+		buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
+
+		widthPos += spacing;
+		node->position.xOperator = widthPos;
+		node->position.yOperator = heightPos;
+		widthPos += (spacing + getWidthOfChar(node->operation));
+
+		buildFormulaCoordinates(node->rightTree, heightPos, widthPos);
+
+		node->height.down = std::max(node->leftTree->height.down, node->rightTree->height.down);
+		node->height.up = std::min(node->leftTree->height.up, node->rightTree->height.up);
+
+		node->size.width = node->leftTree->size.width + node->rightTree->size.width +
+			2 * spacing + getWidthOfChar(node->operation);
+
+		node->size.height = std::abs(node->height.down - node->height.up);
+		return;
+	}
+	else if (node->paranthases)
+	{
+		node->position.xOperator = widthPos;
+		
+
+		buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
+		
+		widthPos = node->position.xOperator + getWidthOfParantheses('(', node->leftTree->size.height)+spacing;
+		
+		buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
+
+		node->position.yOperator = (node->leftTree->height.down + node->leftTree->height.up 
+								- std::abs(node->leftTree->height.down - node->leftTree->height.up)) * 0.5f
+								- (node->leftTree->size.height > 0 ? (getHeightOfParantheses('(', node->leftTree->size.height) * 0.25f) : 0);
+
+		widthPos = widthPos + spacing + getWidthOfParantheses(')', node->leftTree->size.height);
+
+		node->size.width = widthPos - node->position.xOperator;
+		node->size.height = node->leftTree->size.height;
+
+		node->height.up = node->leftTree->height.up;
+		node->height.down = node->leftTree->height.down;
+		return;
+	}
+}
+void drawFormula(formulaTree* node)
+{
+	if (node == NULL) return;
+
+	if (isOnlyTerm(node))
+	{
+		sf::Text text;
+		text.setCharacterSize(characterSize);
+		text.setFillColor(sf::Color::White);
+		text.setPosition(node->position.xFormula, node->position.yFormula);
+		text.setFont(mathFont);
+		text.setString(node->formula);
+		window.draw(text);
+		return;
+	}
+	if (node->paranthases)
+	{
+		sf::Text text;
+		text.setCharacterSize(characterSize + node->leftTree->size.height);
+		text.setFillColor(sf::Color::White);
+		text.setPosition(node->position.xOperator, node->position.yOperator);
+		text.setFont(mathFont);
+		text.setString("(");
+		window.draw(text);
+		drawFormula(node->leftTree);
+		text.setString(")");
+		text.setPosition(node->position.xOperator + node->leftTree->size.width + characterSize, node->position.yOperator);
+		window.draw(text);
 		return;
 	}
 	if (node->operation == '^')
 	{
-		
-		buildFormulaCoords(node->leftTree, xPos, yPos, maximumHeight, minimumHeight);
-		
-		maximumHeight = -1;
-		xPos+=10;
-		float savedXPos = xPos;
-		buildFormulaCoords(node->rightTree, xPos, yPos - 5, maximumHeight, minimumHeight);
-		
-		buildFormulaCoords(node->rightTree, savedXPos, yPos - 5 - std::max(float(0),maximumHeight-(yPos-5)), maximumHeight, minimumHeight);
-		if (node->rightTree->hasParentheses) {
-			node->maxHeightParantheses = maximumHeight;
-			node->minHeightParantheses = minimumHeight;
-		}
-		return;
+		drawFormula(node->leftTree);
+		drawFormula(node->rightTree);
 	}
-
-	node->xPosOfFormula = xPos;
-	float maxH = -1, minH = 100000;
-
-	xPos = node->xPosOfFormula;
-	buildFormulaCoords(node->leftTree, xPos, yPos, maximumHeight, minimumHeight);
-	maxH = maximumHeight; minH = minimumHeight;
-	xPos += 10;
-	node->xPosOfOperator = xPos;
-	node->yPosOfOperator = yPos;
-	xPos = xPos + operatorToText(node->operation, xPos, yPos).getLocalBounds().width;
-	xPos += 10;
-	minimumHeight = 10000;
-	maximumHeight = -1;
-	
-	buildFormulaCoords(node->rightTree, xPos, yPos, maximumHeight, minimumHeight);
-	maxH = std::max(maxH, maximumHeight);
-	minH = std::min(minH, minimumHeight);
-	xPos = node->xPosOfFormula;
-	node->maxHeightParantheses = maxH; node->minHeightParantheses = minH;
-	node->xPosOfParentheses = xPos;
-	if (node->hasParentheses) xPos = xPos + getDrawableParantheses("(", node->xPosOfParentheses, calculateHeightPosition(node),
-		optimalFontSize(node)).getLocalBounds().width;
-	node->xPosOfFormula = xPos;
-	minimumHeight = 10000;
-	maximumHeight = -1;
-	xPos += 5;
-	
-	buildFormulaCoords(node->leftTree, xPos, yPos, maximumHeight, minimumHeight);
-	xPos += 10;
-	node->xPosOfOperator = xPos;
-	node->yPosOfOperator = yPos;
-	xPos = xPos + operatorToText(node->operation, xPos, yPos).getLocalBounds().width;
-	xPos += 10;
-
-	
-	buildFormulaCoords(node->rightTree, xPos, yPos, maximumHeight, minimumHeight);
-	
-
-
-	node->xPosOfFormulaEnd = xPos;
-
-	node->yPosOfFormula = yPos;
-
-	if (node->hasParentheses) xPos += getDrawableParantheses(")", node->xPosOfFormula, calculateHeightPosition(node),
-		optimalFontSize(node)).getLocalBounds().width;
-
-	return;
-}
-
-void drawFormula(formulaTree* node)
-{
-	if (node == NULL) return;
-	if (isLeaf(node)) { window.draw(getDrawableFormula(node->treeFormula, node->xPosOfFormula, node->yPosOfFormula)); return; }
-	if (node->hasParentheses) window.draw(getDrawableParantheses("(", node->xPosOfParentheses ,  calculateHeightPosition(node),
-		optimalFontSize(node)));
-	drawFormula(node->leftTree);
-	if (node->operation != '/' && node->operation != '^') {
-		window.draw(operatorToText(node->operation, node->xPosOfOperator, node->yPosOfOperator));
-	}
-	if (node->operation == '/') {
-		sf::RectangleShape line(sf::Vector2f(node->lengthOfDivision, 1));
-		line.setPosition(node->xPosOfOperator, node->yPosOfOperator);
+	if (node->operation == '/')
+	{
+		drawFormula(node->leftTree);
+		sf::RectangleShape line(sf::Vector2f(node->size.width, characterSize*0.04f));
+		line.setPosition(node->position.xOperator,node->position.yOperator);
 		line.setFillColor(sf::Color::White);
 		window.draw(line);
+		drawFormula(node->rightTree);
 	}
-	drawFormula(node->rightTree);
-	if (node->hasParentheses)  window.draw(getDrawableParantheses(")", node->xPosOfFormulaEnd, calculateHeightPosition(node),
-		std::max(float(28), float(28) + std::abs(node->minHeightParantheses - node->maxHeightParantheses))));
+	if (node->operation != '^' && node->operation != '/')
+	{
+		sf::Text text;
+		text.setCharacterSize(characterSize);
+		text.setFillColor(sf::Color::White);
+		text.setPosition(node->position.xOperator, node->position.yOperator);
+		text.setFont(mathFont);
+		std::string s; s.push_back(node->operation);
+		text.setString(s);
+		drawFormula(node->leftTree);
+		window.draw(text);
+		drawFormula(node->rightTree);
+	}
+	
+	
 }
-
 int main()
 {
-	if (!mathFont.loadFromFile("assets/math_font.otf")) { exit(1); }
-	
-	std::string input = "(x+y+1/2/3/4/5)/(1/2+y-x)";
-	formulaTree* root = buildFormulaTree(input);
-
-	float test = 100;
-	float minH = 1000, maxH = 0;
-	buildFormulaCoords(root,test,600,maxH,minH);
-	
+	if (!mathFont.loadFromFile("assets/math_font.otf")) exit(1);
+	std::string str = "(3/(3+1/(3+1/2))+1/2)/(3-4/4+2,34283/(3,141/0,01/6/9/4/2/0))";
+	formulaTree* root = buildTree(str);
+	float w = 50, h = 600;
+	buildFormulaCoordinates(root, h,w);
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -353,7 +363,6 @@ int main()
 		}
 		window.clear(sf::Color::Black);
 		drawFormula(root);
-		
 		window.display();
 	}
 
