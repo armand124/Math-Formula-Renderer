@@ -1,14 +1,43 @@
-﻿#include <string>
+﻿#pragma once
+#include <string>
 #include <stack>
-namespace str {
-	class Parser {
+class Parser {
 	private:
 		const int numberOfFunctions = 10;
-		std::string functions[20] = { "ln","sqrt","cos","sin","tg",
+		std::string functions[10] = { "ln","sqrt","cos","sin","tg",
 			"ctg","arcsin","arccos","arctg","arcctg" };
 	public:
-
-
+		std::string checkForFunction(std::string str)
+		{
+			for (int i = 0;i < numberOfFunctions;i++)
+			{
+				if (functions[i].size() < str.size())
+				{
+					bool isValid = true;
+					for (int j = 0;j < functions[i].size();j++)
+					{
+						if (functions[i][j] != str[j])
+						{
+							isValid = false;
+							break;
+						}
+					}
+					if (isValid) {
+						std::stack<int>stk;
+						for (int j = functions[i].size();j < str.size()-1;j++)
+						{
+							if (str[j] == '(')
+								stk.push(j);
+							if (str[j] == ')')
+								stk.pop();
+						}
+						if (!stk.empty() && stk.top() == functions[i].size())
+							return functions[i];
+					}
+				}
+			}
+			return "none";
+		}
 		bool isOperator(char x)
 		{
 			return (x == '+') || (x == '-') || (x == '*') || (x == '/') || (x == '^');
@@ -29,20 +58,15 @@ namespace str {
 				if (s[i] != ' ')
 				{
 					if (s[i] == '*') {
-						formula.push_back(' ');
 						formula.push_back(char(183));
-						formula.push_back(' ');
 					}
 					else if (s[i] == '^')
 					{
 						formula.push_back('^');
-						formula.push_back(' ');
 					}
 					else if (isOperator(s[i]))
 					{
-						formula.push_back(' ');
 						formula.push_back(s[i]);
-						formula.push_back(' ');
 					}
 					else
 						formula.push_back(s[i]);
@@ -153,5 +177,5 @@ namespace str {
 			if (!st.empty())
 				return false;
 		}
-	};
-}
+};
+
