@@ -4,7 +4,7 @@
 #include <stack>
 #include <string>
 #include <iostream>
-class Formula{
+class Formula {
 private:
 	sf::Font mathFont, parFont;
 	sf::RenderWindow* window;
@@ -105,13 +105,13 @@ private:
 		txt.setPosition(0, 0);
 		return txt.getLocalBounds().height;
 	}
-	
+
 	void drawSquareRoot(float xDown, float yDown, float xUp, float yUp) {
 		sf::VertexArray squareRoot(sf::LinesStrip, 4);
 
 		squareRoot[0].position = sf::Vector2f(xDown, yDown - (yDown - yUp) * 0.4);
-		squareRoot[1].position = sf::Vector2f(xDown + characterSize*0.66, yDown); 
-		squareRoot[2].position = sf::Vector2f(xDown + characterSize*1.33, yUp);
+		squareRoot[1].position = sf::Vector2f(xDown + characterSize * 0.66, yDown);
+		squareRoot[2].position = sf::Vector2f(xDown + characterSize * 1.33, yUp);
 		squareRoot[3].position = sf::Vector2f(xUp, yUp);
 
 		// Set the color for the square root symbol
@@ -129,7 +129,7 @@ private:
 	{
 		//Create new node of tree
 		formulaTree* node = new formulaTree(formula);
-		
+
 		//If it has paranthases then we eliminate them and go to the next node
 		int numberOfOperators = 0;
 		int numberOfMulDivOperators = 0;
@@ -152,12 +152,12 @@ private:
 			}
 		}
 		//Check if the input is a function
-		
+
 		node->function = parser.checkForFunction(formula);
-		
-		if (node->function!="none")
+
+		if (node->function != "none")
 		{
-			if(node->function == "sqrt")
+			if (node->function == "sqrt")
 				node->leftTree = buildTree(deleteParantheses(formula.substr(node->function.size())));
 			else
 				node->leftTree = buildTree(formula.substr(node->function.size()));
@@ -248,7 +248,7 @@ private:
 			buildFormulaCoordinates(node->leftTree, (heightPos - 0.7f * characterSize) * 2 - node->leftTree->height.down, widthPos);
 
 			widthPos = saveWidthPos + (std::max(node->leftTree->size.width, node->rightTree->size.width) - node->rightTree->size.width) * 0.5f;
-			buildFormulaCoordinates(node->rightTree, (heightPos + 0.7f * characterSize) * 2 - node->rightTree->height.up+characterSize*0.28f, widthPos);
+			buildFormulaCoordinates(node->rightTree, (heightPos + 0.7f * characterSize) * 2 - node->rightTree->height.up + characterSize * 0.28f, widthPos);
 
 			node->height.up = node->leftTree->height.up;
 			node->height.down = node->rightTree->height.down;
@@ -299,26 +299,26 @@ private:
 			node->position.yOperator = (node->leftTree->height.down + node->leftTree->height.up
 				- std::abs(node->leftTree->height.down - node->leftTree->height.up)) * 0.5f
 				- (node->leftTree->size.height > 0 ? (getHeightOfParantheses('(', node->leftTree->size.height) * 0.25f) : 0)
-				+ (node->leftTree->operation=='^' ? characterSize*0.7f : 0);
+				+ (node->leftTree->operation == '^' ? characterSize * 0.7f : 0);
 			widthPos = widthPos + spacing + getWidthOfParantheses(')', node->leftTree->size.height);
 
 			//Save the information of the current formula
 			node->size.width = widthPos - node->position.xOperator;
-			node->size.height = node->leftTree->size.height;
 			node->height.up = node->leftTree->height.up;
 			node->height.down = node->leftTree->height.down;
+			node->size.height = std::abs(node->height.up-node->height.down);
 			return;
 		}
 		else if (node->function != "none")
 		{
-		
+
 			node->position.xOperator = widthPos;
 			node->position.yOperator = heightPos;
 			widthPos += getWidthOfString(node->function);
 
 			if (node->function == "sqrt")
 			{
-				buildFormulaCoordinates(node->leftTree, heightPos + characterSize*0.20f, widthPos);
+				buildFormulaCoordinates(node->leftTree, heightPos + characterSize * 0.20f, widthPos);
 			}
 			else
 				buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
@@ -387,7 +387,7 @@ private:
 		{
 			if (node->function == "sqrt")
 			{
-				drawSquareRoot(node->position.xOperator, node->leftTree->height.down+characterSize, node->leftTree->size.width + node->position.xOperator + getWidthOfString("sqrt"),
+				drawSquareRoot(node->position.xOperator, node->leftTree->height.down + characterSize, node->leftTree->size.width + node->position.xOperator + getWidthOfString("sqrt"),
 					node->leftTree->height.up);
 			}
 			else {
@@ -432,30 +432,30 @@ private:
 
 	}
 
-	public:
+public:
 
-		inline Formula()
-		{
-			//Load the fonts
-			if (!mathFont.loadFromFile("assets/math_font.otf")) exit(1);
-			if (!parFont.loadFromFile("assets/fontParanteze.ttf")) exit(1);
-		}
+	inline Formula()
+	{
+		//Load the fonts
+		if (!mathFont.loadFromFile("assets/math_font.otf")) exit(1);
+		if (!parFont.loadFromFile("assets/fontParanteze.ttf")) exit(1);
+	}
 
-		void printFormula(std::string str, sf::RenderWindow& screen)
-		{
-			formulaTree* root = buildTree(str);
-			
-			float x = 0;
-			buildFormulaCoordinates(root, 0, x);
-			float xOffset = (screen.getSize().x - root->size.width) * 0.5f;
-			buildFormulaCoordinates(root, std::max(0.f, screen.getSize().y * 0.1f-root->height.up), xOffset);
-			window = &screen;
-			drawFormula(root);
-		}
+	void printFormula(std::string str, sf::RenderWindow& screen)
+	{
+		formulaTree* root = buildTree(str);
 
-		void setCharacterSize(float size)
-		{
-			characterSize = size;
-			spacing = characterSize * 0.25f;
-		}
+		float x = 0;
+		buildFormulaCoordinates(root, 0, x);
+		float xOffset = (screen.getSize().x - root->size.width) * 0.5f;
+		buildFormulaCoordinates(root, std::max(0.f, screen.getSize().y * 0.1f - root->height.up), xOffset);
+		window = &screen;
+		drawFormula(root);
+	}
+
+	void setCharacterSize(float size)
+	{
+		characterSize = size;
+		spacing = characterSize * 0.25f;
+	}
 };

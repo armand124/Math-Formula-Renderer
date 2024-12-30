@@ -180,6 +180,6 @@ public:
 
 int main()
 {
-	Gui app("Miawer", 1920, 1080);
+	Gui app("Vizualizator Formule", 1920, 1080);
 	app.run();
 }

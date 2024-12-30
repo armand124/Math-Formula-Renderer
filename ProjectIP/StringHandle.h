@@ -28,10 +28,12 @@ class Parser {
 						{
 							if (str[j] == '(')
 								stk.push(j);
-							if (str[j] == ')')
-								stk.pop();
+							if (str[j] == ')') {
+								if (stk.empty()) isValid = false;
+								else stk.pop();
+							}
 						}
-						if (!stk.empty() && stk.top() == functions[i].size())
+						if (isValid&&!stk.empty() && stk.top() == functions[i].size())
 							return functions[i];
 					}
 				}
