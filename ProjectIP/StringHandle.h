@@ -53,21 +53,12 @@ class Parser {
 		std::string formulaParsedString(std::string s)
 		{
 			std::string formula;
-			for (int i = 0;i < s.size();i++)
+			for (int i = 0;i <s.size();i++)
 			{
 				if (s[i] != ' ')
 				{
-					if (s[i] == '*') {
+					if (s[i] == '*')
 						formula.push_back(char(183));
-					}
-					else if (s[i] == '^')
-					{
-						formula.push_back('^');
-					}
-					else if (isOperator(s[i]))
-					{
-						formula.push_back(s[i]);
-					}
 					else
 						formula.push_back(s[i]);
 				}

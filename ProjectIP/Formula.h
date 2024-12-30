@@ -10,6 +10,7 @@ private:
 	sf::RenderWindow* window;
 	Parser parser;
 	float characterSize = 30.f;
+	const char multiply = char(183);
 	float spacing = characterSize * 0.25f;
 	struct formulaTree {
 		char operation;
@@ -160,7 +161,7 @@ private:
 				addSubIndex = i;
 			}
 
-			if ((formula[i] == '*' || formula[i] == '/') && currentPriority < mulDivPriority)
+			if ((formula[i] == multiply || formula[i] == '/') && currentPriority < mulDivPriority)
 			{
 				mulDivPriority = currentPriority;
 				mulDivIndex = i;
@@ -277,7 +278,7 @@ private:
 			node->position.yOperator = (node->leftTree->height.down + node->leftTree->height.up
 				- std::abs(node->leftTree->height.down - node->leftTree->height.up)) * 0.5f
 				- (node->leftTree->size.height > 0 ? (getHeightOfParantheses('(', node->leftTree->size.height) * 0.25f) : 0)
-				+ (node->leftTree->operation=='^' ? characterSize*0.7f : 0)+100;
+				+ (node->leftTree->operation=='^' ? characterSize*0.7f : 0);
 			widthPos = widthPos + spacing + getWidthOfParantheses(')', node->leftTree->size.height);
 
 			//Save the information of the current formula

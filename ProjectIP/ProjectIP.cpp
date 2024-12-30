@@ -152,29 +152,28 @@ public:
 						warningMessage.setString("");
 
 					}
-					if (!pars.isStringValid(inputString)) {
-						warningMessage.setString("Formula este gresita!");
-						formula.setString("");
-					}
-					else
-					{
-						std::string goodString = pars.formulaParsedString(inputString);
-						formula.setString(goodString);
-
+					if (inputString != "") {
+						if (!pars.isStringValid(inputString)) {
+							warningMessage.setString("Formula este gresita!");
+							formula.setString("");
+						}
+						else
+						{
+							std::string goodString = pars.formulaParsedString(inputString);
+							formula.setString(goodString);
+						}
 					}
 				}
 			}
 			
 			window.clear();
-			formulaDraw.printFormula(pars.formulaParsedString(inputString),window);
-			
+			formulaDraw.printFormula(formula.getString(), window);
 			window.draw(warningMessage);
 			window.draw(inputBoxFrame);
 			window.draw(inputBoxText);
 			//----------------------------------------
 			window.display();
 		}
-
 	}
 };
 
