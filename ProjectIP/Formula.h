@@ -157,7 +157,10 @@ private:
 		
 		if (node->function!="none")
 		{
-			node->leftTree = buildTree(formula.substr(node->function.size()));
+			if(node->function == "sqrt")
+				node->leftTree = buildTree(deleteParantheses(formula.substr(node->function.size())));
+			else
+				node->leftTree = buildTree(formula.substr(node->function.size()));
 			return node;
 		}
 
@@ -313,11 +316,16 @@ private:
 			node->position.yOperator = heightPos;
 			widthPos += getWidthOfString(node->function);
 
-			buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
+			if (node->function == "sqrt")
+			{
+				buildFormulaCoordinates(node->leftTree, heightPos + characterSize*0.20f, widthPos);
+			}
+			else
+				buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
 
 			node->size.width = widthPos - node->position.xOperator;
 			node->size.height = node->leftTree->size.height;
-			node->height.up = node->leftTree->height.up;
+			node->height.up = node->leftTree->height.up - characterSize * 0.20f;
 			node->height.down = node->leftTree->height.down;
 			return;
 		}
