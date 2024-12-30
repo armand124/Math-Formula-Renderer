@@ -9,7 +9,7 @@ private:
 	sf::Font mathFont, parFont;
 	sf::RenderWindow* window;
 	Parser parser;
-	float characterSize = 30.f;
+	float characterSize = 40.f;
 	const char multiply = char(183);
 	float spacing = characterSize * 0.25f;
 	struct formulaTree {
@@ -106,6 +106,24 @@ private:
 		return txt.getLocalBounds().height;
 	}
 	
+	void drawSquareRoot(float xDown, float yDown, float xUp, float yUp) {
+		sf::VertexArray squareRoot(sf::LinesStrip, 4);
+
+		squareRoot[0].position = sf::Vector2f(xDown, yDown - (yDown - yUp) * 0.4);
+		squareRoot[1].position = sf::Vector2f(xDown + characterSize*0.66, yDown); 
+		squareRoot[2].position = sf::Vector2f(xDown + characterSize*1.33, yUp);
+		squareRoot[3].position = sf::Vector2f(xUp, yUp);
+
+		// Set the color for the square root symbol
+		for (size_t i = 0; i < squareRoot.getVertexCount(); ++i) {
+			squareRoot[i].color = sf::Color::White;
+		}
+
+		// Draw the square root symbol on the window
+		window->draw(squareRoot);
+	}
+
+
 	//--------------------------------------------------------------------------------------
 	formulaTree* buildTree(std::string formula)
 	{
@@ -227,7 +245,7 @@ private:
 			buildFormulaCoordinates(node->leftTree, (heightPos - 0.7f * characterSize) * 2 - node->leftTree->height.down, widthPos);
 
 			widthPos = saveWidthPos + (std::max(node->leftTree->size.width, node->rightTree->size.width) - node->rightTree->size.width) * 0.5f;
-			buildFormulaCoordinates(node->rightTree, (heightPos + 0.7f * characterSize) * 2 - node->rightTree->height.up, widthPos);
+			buildFormulaCoordinates(node->rightTree, (heightPos + 0.7f * characterSize) * 2 - node->rightTree->height.up+characterSize*0.28f, widthPos);
 
 			node->height.up = node->leftTree->height.up;
 			node->height.down = node->rightTree->height.down;
@@ -359,13 +377,20 @@ private:
 		}
 		else if (node->function != "none")
 		{
-			sf::Text text;
-			text.setCharacterSize(characterSize);
-			text.setFillColor(sf::Color::White);
-			text.setPosition(node->position.xOperator, node->position.yOperator);
-			text.setFont(mathFont);
-			text.setString(node->function);
-			window->draw(text);
+			if (node->function == "sqrt")
+			{
+				drawSquareRoot(node->position.xOperator, node->leftTree->height.down+characterSize, node->leftTree->size.width + node->position.xOperator + getWidthOfString("sqrt"),
+					node->leftTree->height.up);
+			}
+			else {
+				sf::Text text;
+				text.setCharacterSize(characterSize);
+				text.setFillColor(sf::Color::White);
+				text.setPosition(node->position.xOperator, node->position.yOperator);
+				text.setFont(mathFont);
+				text.setString(node->function);
+				window->draw(text);
+			}
 			drawFormula(node->leftTree);
 			return;
 		}

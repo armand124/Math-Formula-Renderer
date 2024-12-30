@@ -165,8 +165,9 @@ public:
 					}
 				}
 			}
-			
+
 			window.clear();
+			if (inputString == "") formula.setString("");
 			formulaDraw.printFormula(formula.getString(), window);
 			window.draw(warningMessage);
 			window.draw(inputBoxFrame);
