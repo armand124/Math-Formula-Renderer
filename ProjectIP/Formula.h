@@ -6,12 +6,11 @@
 #include <iostream>
 class Formula {
 private:
-	float characterSize = 40.f;
 	sf::Font mathFont, parFont;
 	sf::RenderWindow* window;
 	Parser parser;
-	//float characterSize = 40.f;
 	const char multiply = char(183);
+	float characterSize = 40.f;
 	float spacing = characterSize * 0.25f;
 	struct formulaTree {
 		char operation;
@@ -355,7 +354,6 @@ private:
 	}
 	void drawFormula(formulaTree* node)
 	{
-		//std::cout << characterSize << '\n';
 		if (node == NULL) return;
 
 		if (isOnlyTerm(node))
@@ -395,6 +393,7 @@ private:
 			else {
 				sf::Text text;
 				text.setCharacterSize(characterSize);
+				
 				text.setFillColor(sf::Color::White);
 				text.setPosition(node->position.xOperator, node->position.yOperator);
 				text.setFont(mathFont);
@@ -443,10 +442,10 @@ public:
 		if (!parFont.loadFromFile("assets/fontParanteze.ttf")) exit(1);
 	}
 
-	void printFormula(std::string str, sf::RenderWindow& screen)
+	void printFormula(std::string str, sf::RenderWindow& screen,float charSize)
 	{
 		formulaTree* root = buildTree(str);
-
+		characterSize = charSize;
 		float x = 0;
 		buildFormulaCoordinates(root, 0, x);
 		float xOffset = (screen.getSize().x - root->size.width) * 0.5f;
@@ -455,12 +454,6 @@ public:
 		drawFormula(root);
 	}
 
-	void setCharacterSize(float size)
-	{
-		characterSize = size;
-		spacing = characterSize * 0.25f;
-	}
-	
 	float getCharacterSize()
 	{
 		return characterSize;

@@ -25,8 +25,13 @@ private:
 	sf::Event event;
 	Formula formulaDraw;
 	Formula size;
-	float chasize = 40.f;
+	float charSize = 40.f;
 	bool startScreen = true;
+	struct ButtonPair {
+		sf::RectangleShape bk;
+		sf::Text txt;
+	};
+
 	class Components {
 	public:
 		sf::Font mathFont;
@@ -35,6 +40,8 @@ private:
 			sf::Text inText;
 			std::string userInput = "";
 		};
+
+		
 		void loadFont()
 		{
 			if (!mathFont.loadFromFile("assets/math_font.otf")) { exit(1); }
@@ -75,11 +82,7 @@ public:
 
 	void run()
 	{
-		sf::Font font1;
-		if (!font1.loadFromFile("ariaal.ttf")) { 
-			std::cerr << "Failed to load font!" << std::endl;
-			exit(1);
-		}
+		
 		sf::Font generalFont;
 		if (!generalFont.loadFromFile("assets/arial.ttf")) { exit(1); }
 		Components component;
@@ -110,7 +113,7 @@ public:
 
 		sf::Text minusText;
 		minusText.setString("-");
-		minusText.setFont(font1);
+		minusText.setFont(generalFont);
 		minusText.setCharacterSize(25);
 		minusText.setFillColor(sf::Color::Black);
 		minusText.setPosition(
@@ -123,47 +126,40 @@ public:
 
 		sf::Text plusText;
 		plusText.setString("+");
-		plusText.setFont(font1);
+		plusText.setFont(generalFont);
 		plusText.setCharacterSize(20);
 		plusText.setFillColor(sf::Color::Black);
 		plusText.setPosition(
 			plusButton.getPosition().x + (plusButton.getSize().x - plusText.getLocalBounds().width) / 2,
 			plusButton.getPosition().y + (plusButton.getSize().y - plusText.getLocalBounds().height) / 2 - 5
 		);
+		
+		ButtonPair buttons[10];
+		for (int i = 0;i <= 9;i++)
+		{
+			sf::RectangleShape Button(sf::Vector2f(40, 40));
+			Button.setPosition(400 + i * 50, 600);
+			Button.setFillColor(sf::Color::White);
 
-		sf::RectangleShape Button1(sf::Vector2f(40, 20));
-		Button1.setPosition(400, 600);
-		Button1.setFillColor(sf::Color::White);
+			sf::Text Text;
+			std::string textString;
+			textString.push_back('0' + i);
+			Text.setString(textString);
+			Text.setFont(generalFont);
+			Text.setCharacterSize(25);
+			Text.setFillColor(sf::Color::Black);
+			Text.setPosition(
+				Button.getPosition().x + (Button.getSize().x - Text.getLocalBounds().width) / 2,
+				Button.getPosition().y + (Button.getSize().y - Text.getLocalBounds().height) / 2 - 5
+			);
+			ButtonPair pair;
+			pair.bk = Button;
+			pair.txt = Text;
+			buttons[i] = pair;
+		}
 
-		sf::Text Text1;
-		Text1.setString("1");
-		Text1.setFont(font1);
-		Text1.setCharacterSize(25);
-		Text1.setFillColor(sf::Color::Black);
-		Text1.setPosition(
-			Button1.getPosition().x + (Button1.getSize().x - Text1.getLocalBounds().width) / 2,
-			Button1.getPosition().y + (Button1.getSize().y - Text1.getLocalBounds().height) / 2 - 5
-		);
-		sf::RectangleShape Button2(sf::Vector2f(40, 20));
-		Button2.setPosition(450, 600);
-		Button2.setFillColor(sf::Color::White);
 
-		sf::Text Text2;
-		Text2.setString("2");
-		Text2.setFont(font1);
-		Text2.setCharacterSize(20);
-		Text2.setFillColor(sf::Color::Black);
-		Text2.setPosition(
-			Button2.getPosition().x + (Button2.getSize().x - Text2.getLocalBounds().width) / 2,
-			Button2.getPosition().y + (Button2.getSize().y - Text2.getLocalBounds().height) / 2 - 5
-		);
-
-		//Welcome screen
-		sf::Text welcomeMessage;
-		welcomeMessage.setCharacterSize((HEIGHT * 0.07 * 0.40));
-		welcomeMessage.setFillColor(sf::Color::White);
-		welcomeMessage.setPosition(WIDTH * 0.21, HEIGHT * 0.815);
-
+		
 		while (window.isOpen())
 		{
 			sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
@@ -175,8 +171,7 @@ public:
 					minusButton.setFillColor(sf::Color::Green); 
 					if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 						minusButton.setFillColor(sf::Color::Red); 
-						std::cout << "-\n";
-						size.setCharacterSize(size.getCharacterSize() - 3);
+						charSize = std::max(charSize - 4, 22.f);
 					}
 				}
 				else {
@@ -187,9 +182,7 @@ public:
 					plusButton.setFillColor(sf::Color::Green); 
 					if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 						plusButton.setFillColor(sf::Color::Red);
-						std::cout << "+\n";
-						size.setCharacterSize(size.getCharacterSize() + 3);
-						
+						charSize = std::min(charSize + 4, 60.f);
 					}
 				}
 				else {
@@ -251,17 +244,16 @@ public:
 				}
 			}
 
+			//-----------------------------------------------
+			//Draw
 			window.clear();
 			if (inputString == "") formula.setString("");
-			formulaDraw.printFormula(formula.getString(), window);
+			formulaDraw.printFormula(formula.getString(), window, charSize);
 			window.draw(minusButton);
 			window.draw(minusText);
 			window.draw(plusButton);
 			window.draw(plusText);
-			window.draw(Button1);
-			window.draw(Text1);
-			window.draw(Button2);
-			window.draw(Text2);
+			for (int i = 0;i < 10;i++) { window.draw(buttons[i].bk); window.draw(buttons[i].txt); }
 			window.draw(warningMessage);
 			window.draw(inputBoxFrame);
 			window.draw(inputBoxText);
