@@ -6,10 +6,11 @@
 #include <iostream>
 class Formula {
 private:
+	float characterSize = 40.f;
 	sf::Font mathFont, parFont;
 	sf::RenderWindow* window;
 	Parser parser;
-	float characterSize = 40.f;
+	//float characterSize = 40.f;
 	const char multiply = char(183);
 	float spacing = characterSize * 0.25f;
 	struct formulaTree {
@@ -354,6 +355,7 @@ private:
 	}
 	void drawFormula(formulaTree* node)
 	{
+		//std::cout << characterSize << '\n';
 		if (node == NULL) return;
 
 		if (isOnlyTerm(node))
@@ -433,7 +435,7 @@ private:
 	}
 
 public:
-
+	float sizedif = 40.f;
 	inline Formula()
 	{
 		//Load the fonts
@@ -458,4 +460,10 @@ public:
 		characterSize = size;
 		spacing = characterSize * 0.25f;
 	}
+	
+	float getCharacterSize()
+	{
+		return characterSize;
+	}
+
 };
