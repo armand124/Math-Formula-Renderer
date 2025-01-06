@@ -188,6 +188,18 @@ public:
 							inputString.append(buttonsstring[i]);
 							inputBoxText.setString(inputString);
 							formula.setString(inputString);
+
+							if (inputString != "") {
+								if (!pars.isStringValid(inputString)) {
+									warningMessage.setString("Formula este gresita!");
+									formula.setString("");
+								}
+								else
+								{
+									std::string goodString = pars.formulaParsedString(inputString);
+									formula.setString(goodString);
+								}
+							}
 						}
 					}
 					else
