@@ -10,6 +10,7 @@
 #include <vector>
 #include "Formula.h"
 #include "Button.h"
+
 int max(int x, int y)
 {
 	if (x > y)
@@ -25,6 +26,9 @@ private:
 	sf::Event event;
 	Formula formulaDraw;
 	Formula size;
+	std::string buttonsstring[29] = { "1", "2", "3", "+", "(", "sin","arcsin", "4",
+	"5", "6", "-", ")", "cos", "arccos", "7", "8", "9", "=", "ln", "tg", "arctg",
+	"*", "0", "/", "^", "sqrt", "ctg", "arcctg"};
 	float charSize = 40.f;
 	bool startScreen = true;
 	struct ButtonPair {
@@ -134,17 +138,22 @@ public:
 			plusButton.getPosition().y + (plusButton.getSize().y - plusText.getLocalBounds().height) / 2 - 5
 		);
 		
-		ButtonPair buttons[10];
-		for (int i = 0;i <= 9;i++)
+		ButtonPair buttons[29];
+		int pozx=WIDTH*0.29, pozy=HEIGHT*0.509;
+		for (int i = 0;i < 28;i++)
 		{
-			sf::RectangleShape Button(sf::Vector2f(40, 40));
-			Button.setPosition(400 + i * 50, 600);
+			sf::RectangleShape Button(sf::Vector2f(100, 60));
+			if (i % 7 == 0)
+			{
+				pozx=WIDTH*0.29;
+				pozy += 70;
+			}
+
+			Button.setPosition(pozx, pozy);
 			Button.setFillColor(sf::Color::White);
 
 			sf::Text Text;
-			std::string textString;
-			textString.push_back('0' + i);
-			Text.setString(textString);
+			Text.setString(buttonsstring[i]);
 			Text.setFont(generalFont);
 			Text.setCharacterSize(25);
 			Text.setFillColor(sf::Color::Black);
@@ -156,10 +165,11 @@ public:
 			pair.bk = Button;
 			pair.txt = Text;
 			buttons[i] = pair;
+			pozx += 110;
 		}
 
 
-		
+		int delay = 0;
 		while (window.isOpen())
 		{
 			sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
@@ -167,6 +177,24 @@ public:
 			{
 				if (event.type == sf::Event::Closed)
 					window.close();
+				for (int i = 0;i < 28;i++)
+				{
+					if (buttons[i].bk.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition)))
+					{
+						buttons[i].bk.setFillColor(sf::Color::Green);
+						if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+						{
+							buttons[i].bk.setFillColor(sf::Color::Red);
+							inputString.append(buttonsstring[i]);
+							inputBoxText.setString(inputString);
+							formula.setString(inputString);
+						}
+					}
+					else
+					{
+						buttons[i].bk.setFillColor(sf::Color::White);
+					}
+				}
 				if (minusButton.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
 					minusButton.setFillColor(sf::Color::Green); 
 					if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
@@ -253,7 +281,7 @@ public:
 			window.draw(minusText);
 			window.draw(plusButton);
 			window.draw(plusText);
-			for (int i = 0;i < 10;i++) { window.draw(buttons[i].bk); window.draw(buttons[i].txt); }
+			for (int i = 0;i < 28;i++) { window.draw(buttons[i].bk); window.draw(buttons[i].txt); }
 			window.draw(warningMessage);
 			window.draw(inputBoxFrame);
 			window.draw(inputBoxText);
