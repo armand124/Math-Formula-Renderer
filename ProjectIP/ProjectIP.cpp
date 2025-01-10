@@ -182,7 +182,7 @@ public:
 					if (buttons[i].bk.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition)))
 					{
 						buttons[i].bk.setFillColor(sf::Color::Green);
-						if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+						if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
 						{
 							buttons[i].bk.setFillColor(sf::Color::Red);
 							inputString.append(buttonsstring[i]);
@@ -209,7 +209,7 @@ public:
 				}
 				if (minusButton.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
 					minusButton.setFillColor(sf::Color::Green); 
-					if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+					if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
 						minusButton.setFillColor(sf::Color::Red); 
 						charSize = std::max(charSize - 4, 22.f);
 					}
@@ -220,7 +220,7 @@ public:
 
 				if (plusButton.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
 					plusButton.setFillColor(sf::Color::Green); 
-					if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+					if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
 						plusButton.setFillColor(sf::Color::Red);
 						charSize = std::min(charSize + 4, 60.f);
 					}
