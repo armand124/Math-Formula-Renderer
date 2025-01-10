@@ -288,6 +288,8 @@ public:
 			//Draw
 			window.clear();
 			if (inputString == "") formula.setString("");
+			if (inputString != "" && !pars.isStringValid(inputString)) warningMessage.setString("Formula este gresita!");
+			else warningMessage.setString("");
 			formulaDraw.printFormula(formula.getString(), window, charSize);
 			window.draw(minusButton);
 			window.draw(minusText);
