@@ -27,7 +27,7 @@ private:
 	Formula formulaDraw;
 	Formula size;
 	std::string buttonsstring[29] = { "1", "2", "3", "+", "(", "sin","arcsin", "4",
-	"5", "6", "-", ")", "cos", "arccos", "7", "8", "9", "=", "ln", "tg", "arctg",
+	"5", "6", "-", ")", "cos", "arccos", "7", "8", "9", ",", "ln", "tg", "arctg",
 	"*", "0", "/", "^", "sqrt", "ctg", "arcctg"};
 	float charSize = 40.f;
 	bool startScreen = true;
@@ -230,7 +230,7 @@ public:
 				}
 				if (event.type == sf::Event::TextEntered)
 				{
-					if (event.text.unicode == 13 || event.text.unicode == 9 || event.text.unicode == 27)
+					if (event.text.unicode == 13 || event.text.unicode == 9 || event.text.unicode == 27 || event.text.unicode == 32)
 						continue;
 					if (!startedTyping)
 					{

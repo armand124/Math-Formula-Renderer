@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <string>
+#include <unordered_set>
 #include <stack>
+#include <regex>
 class Parser {
 	private:
 		const int numberOfFunctions = 10;
@@ -67,108 +69,72 @@ class Parser {
 			}
 			return formula;
 		}
-
+		
 		bool isStringValid(std::string s)
 		{
-			std::string newS;
-			std::stack<char>st;
-			for (int i = 0;i < s.size();i++)
-				if (s[i] != ' ') newS.push_back(s[i]);
-			int i = 0;
-			if (isOperator(newS[0]) || newS[0] == ')' || newS[0] == ',' || newS[0] == ';' || newS[0] == '_')
-				return false;
-			if (newS[0] == '(')
-				st.push('(');
-			if (isOperator(newS[newS.size() - 1]))
-				return false;
-			if (isLit(newS[0]))
+			for (auto x : s)
 			{
-				std::string form;
-				while (isLit(newS[i]))
+				if (!(x == ')' || (x == '(') || isOperator(x) || isLit(x) || isdigit(x) || x == ',')) return false;
+			}
+			if (s.size() == 1 && !isLit(s[0]) && !isdigit(s[0])) return false;
+			//Check if the paranthases are correct
+			std::stack<int>stk;
+			for (int i = 0;i < s.size();i++)
+			{
+				if (s[i] == '(')
+					stk.push(i);
+				if (s[i] == ')')
 				{
-					form.push_back(newS[i]);
-					i++;
-				}
-				if (form.size() != 1)
-				{
-					bool ok = 0;
-					for (int j = 0;j < numberOfFunctions;j++)
-					{
-						if (form == functions[j])
-						{
-							ok = 1;
-							break;
-						}
-					}
-					if (!ok)
-						return false;
-					if (i < newS.size() - 1)
-					{
-						if (newS[i] != '(')
-							return false;
-					}
-					else
-						return false;
+					if (stk.empty()) return false;
+					stk.pop();
 				}
 			}
-			if (i < 1)
-				i = 1;
-			while (i < newS.size())
+			if (!stk.empty()) return false;
+
+			//Check wether the functions are correct
+			int i = 0;
+			while (i < s.size())
 			{
-				if (newS[i] == '_' || newS[i] == ';')return false;
-				if (isOperator(newS[i]) && isOperator(newS[i - 1]))return false;
-				if (isOperator(newS[i]) && newS[i - 1] == '(')return false;
-				if (newS[i] == ',' && !isdigit(newS[i - 1]))return false;
-				if (isLit(newS[i]))
+				if (isLit(s[i]) && isLit(s[i + 1]))
 				{
-					if (!isOperator(newS[i - 1]) && newS[i - 1] != '(')
-						return false;
-					std::string form;
-					while (isLit(newS[i]))
+					bool ok = false;
+					std::string function;
+					int j = i;
+					for (j = i;isLit(s[j]) && j < s.size();j++)
 					{
-						form.push_back(newS[i]);
-						i++;
+						function.push_back(s[j]);
 					}
-					if (form.size() != 1)
+					for (int k = 0; k < numberOfFunctions; k++)
 					{
-						bool ok = 0;
-						for (int j = 0;j < numberOfFunctions;j++)
+						if (functions[k] == function)
 						{
-							if (form == functions[j])
-							{
-								ok = 1;
-								break;
-							}
+							ok = true;
 						}
-						if (!ok)
-							return false;
-						if (i < newS.size() - 1)
-						{
-							if (newS[i] != '(')
-								return false;
-						}
-						else
-							return false;
 					}
+					if (!ok) return false;
+					if (j - s.size() < 2) return false;
+					i = j;
 				}
-				if (newS[i] == '(') {
-					if (!isOperator(newS[i - 1]) && !isLit(newS[i - 1]))
-					{
-						return false;
-					}
-					st.push('(');
-				}
-				if (newS[i] == ')')
+				if (s[i] == '/' || s[i] == '*' || s[i] == '^')
 				{
-					if (st.empty())
+					if (i - 1 < 0) return false;
+					if (i + 1 == s.size()) return false;
+					if (!((isLit(s[i + 1]) || isdigit(s[i + 1]) || s[i + 1] == '(') && (isLit(s[i - 1]) || isdigit(s[i - 1]) || s[i - 1] == ')')))
 						return false;
-					else
-						st.pop();
 				}
+				if (s[i] == '+' || s[i] == '-')
+				{
+					if (i-1>=0 && isOperator(s[i - 1]))return false;
+					if (i + 1 == s.size()) return false;
+					if (isOperator(s[i + 1])) return false;
+				}
+				if (s[i] == ',' && i - 1 < 0) return false;
+				if (s[i] == ',' && !isdigit(s[i - 1])) return false;
+				if (s[i] == ')' && s[i - 1] == '(') return false;
 				i++;
 			}
-			if (!st.empty())
-				return false;
+			return true;
 		}
+
 };
 

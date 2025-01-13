@@ -166,7 +166,8 @@ private:
 
 		//Check whats the lowest priority operation in the current string
 		int addSubIndex = -1, addSubPriority = 1e9;
-		int mulDivIndex = -1, mulDivPriority = 1e9;
+		int mulIndex = -1, mulPriority = 1e9;
+		int divIndex = -1, divPriority = 1e9;
 		int powIndex = -1, powPriority = 1e9;
 
 		int minimumPriority = 1e9, currentPriority = 0;
@@ -182,12 +183,16 @@ private:
 				addSubIndex = i;
 			}
 
-			if ((formula[i] == multiply || formula[i] == '/') && currentPriority < mulDivPriority)
+			if ((formula[i] == multiply) && currentPriority < mulPriority)
 			{
-				mulDivPriority = currentPriority;
-				mulDivIndex = i;
+				mulPriority = currentPriority;
+				mulIndex = i;
 			}
-
+			if ((formula[i] == '/') && currentPriority < divPriority)
+			{
+				divPriority = currentPriority;
+				divIndex = i;
+			}
 			if ((formula[i] == '^') && currentPriority < powPriority)
 			{
 				powPriority = currentPriority;
@@ -196,16 +201,17 @@ private:
 		}
 
 		//Check if there is at least an operator
-		if (addSubIndex == -1 && mulDivIndex == -1 && powIndex == -1)
+		if (addSubIndex == -1 && mulIndex == -1 && powIndex == -1 && divIndex==-1)
 			return node;
 
 		//Find which operator has the lowest priority and it's location
-		minimumPriority = std::min(std::min(addSubPriority, mulDivPriority), powPriority);
+		minimumPriority = std::min(std::min(addSubPriority, mulPriority), std::min(powPriority,divPriority));
 
 		int operatorIndex = 0;
 
 		if (minimumPriority == addSubPriority) operatorIndex = addSubIndex;
-		else if (minimumPriority == mulDivPriority) operatorIndex = mulDivIndex;
+		else if (minimumPriority == mulPriority) operatorIndex = mulIndex;
+		else if (minimumPriority == divPriority) operatorIndex = divIndex;
 		else operatorIndex = powIndex;
 
 		//Break the current formula in two parts -> the left part of the operation and the right part
@@ -290,7 +296,8 @@ private:
 			//Calculate the proportion of the formula within the parantheses
 			buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
 
-			widthPos = node->position.xOperator + getWidthOfParantheses('(', node->leftTree->size.height) + spacing;
+			widthPos = node->position.xOperator + getWidthOfParantheses('(', node->leftTree->size.height) 
+				+ getHeightOfParantheses('(', node->leftTree->size.height) *0.15f;
 
 			//Recalculate the positions
 			buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
@@ -300,7 +307,7 @@ private:
 				- std::abs(node->leftTree->height.down - node->leftTree->height.up)) * 0.5f
 				- (node->leftTree->size.height > 0 ? (getHeightOfParantheses('(', node->leftTree->size.height) * 0.25f) : 0)
 				+ (node->leftTree->operation == '^' ? characterSize * 0.7f : 0);
-			widthPos = widthPos + spacing + getWidthOfParantheses(')', node->leftTree->size.height);
+			widthPos = widthPos + getHeightOfParantheses(')', node->leftTree->size.height) * 0.15f + getWidthOfParantheses(')', node->leftTree->size.height);
 
 			//Save the information of the current formula
 			node->size.width = widthPos - node->position.xOperator;
@@ -370,7 +377,7 @@ private:
 		else if (node->paranthases)
 		{
 			sf::Text text;
-			text.setCharacterSize(characterSize + node->leftTree->size.height);
+			text.setCharacterSize(characterSize + node->leftTree->size.height*1.2f);
 			text.setFillColor(sf::Color::White);
 			text.setPosition(node->position.xOperator, node->position.yOperator);
 			text.setFont(parFont);
@@ -378,7 +385,7 @@ private:
 			window->draw(text);
 			drawFormula(node->leftTree);
 			text.setString(")");
-			text.setPosition(node->position.xOperator + node->leftTree->size.width
+			text.setPosition(node->position.xOperator + node->leftTree->size.width + getHeightOfParantheses(')', node->leftTree->size.height) * 0.15f 
 				+ getWidthOfParantheses(')', node->leftTree->size.height) * 0.609 + int(characterSize * 3 / getWidthOfParantheses(')', node->leftTree->size.height)), node->position.yOperator);
 			window->draw(text);
 			return;
