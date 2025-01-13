@@ -72,6 +72,7 @@ class Parser {
 		
 		bool isStringValid(std::string s)
 		{
+			
 			for (auto x : s)
 			{
 				if (!(x == ')' || (x == '(') || isOperator(x) || isLit(x) || isdigit(x) || x == ',')) return false;
@@ -90,11 +91,44 @@ class Parser {
 				}
 			}
 			if (!stk.empty()) return false;
-
-			//Check wether the functions are correct
+			//Check for correct ','
 			int i = 0;
+			int virgula = 0;
 			while (i < s.size())
 			{
+				if (s[i] == ',')
+					virgula++;
+				else if (!isdigit(s[i])) {
+					virgula = std::max(0, virgula - 1);
+				}
+				if (virgula > 1)
+					return false;
+				i++;
+			}
+			//Check wether the functions are correct
+			i = 0;
+			virgula = 0;
+			while (i < s.size())
+			{
+				if (isLit(s[i]))
+				{
+					if (i - 1 >= 0)
+					{
+						if (isdigit(s[i - 1]) || s[i - 1] == ',' || s[i - 1] == ')') return false;
+					}
+					if (i + 1 < s.size())
+					{
+						if (isdigit(s[i + 1]) || s[i + 1] == ',') return false;
+					}
+				}
+				if (isdigit(s[i]))
+				{
+					if (i - 1 >= 0)
+					{
+						if (isLit(s[i - 1])) return false;
+						if (s[i - 1] == ')') return false;
+					}
+				}
 				if (isLit(s[i]) && isLit(s[i + 1]))
 				{
 					bool ok = false;
@@ -128,11 +162,15 @@ class Parser {
 					if (i + 1 == s.size()) return false;
 					if (isOperator(s[i + 1])) return false;
 				}
+				if (s[i] == '0' && ((i>0 && !isdigit(s[i-1])||(i==0))) && i + 1 != s.size() && isdigit(s[i + 1]) && virgula == 0) return false;
 				if (s[i] == ',' && i - 1 < 0) return false;
 				if (s[i] == ',' && !isdigit(s[i - 1])) return false;
 				if (s[i] == ')' && s[i - 1] == '(') return false;
+				if (s[i] == ',') virgula++;
+				else if(!isdigit(s[i])) virgula = std::max(0, virgula - 1);
 				i++;
 			}
+			
 			return true;
 		}
 

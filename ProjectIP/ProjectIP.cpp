@@ -88,6 +88,7 @@ public:
 	{
 		
 		sf::Font generalFont;
+		bool changed = false;
 		if (!generalFont.loadFromFile("assets/arial.ttf")) { exit(1); }
 		Components component;
 		component.loadFont();
@@ -169,12 +170,13 @@ public:
 		}
 
 
-		int delay = 0;
+		
 		while (window.isOpen())
 		{
 			sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
 			while (window.pollEvent(event))
 			{
+				changed = false;
 				if (event.type == sf::Event::Closed)
 					window.close();
 				for (int i = 0;i < 28;i++)
@@ -188,7 +190,7 @@ public:
 							inputString.append(buttonsstring[i]);
 							inputBoxText.setString(inputString);
 							formula.setString(inputString);
-
+							changed = true;
 							if (inputString != "") {
 								if (!pars.isStringValid(inputString)) {
 									warningMessage.setString("Formula este gresita!");
@@ -212,9 +214,11 @@ public:
 					if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
 						minusButton.setFillColor(sf::Color::Red); 
 						charSize = std::max(charSize - 4, 22.f);
+						changed = true;
 					}
 				}
 				else {
+					changed = true;
 					minusButton.setFillColor(sf::Color::White);
 				}
 
@@ -222,10 +226,12 @@ public:
 					plusButton.setFillColor(sf::Color::Green); 
 					if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
 						plusButton.setFillColor(sf::Color::Red);
+						changed = true;
 						charSize = std::min(charSize + 4, 60.f);
 					}
 				}
 				else {
+					changed = true;
 					plusButton.setFillColor(sf::Color::White); 
 				}
 				if (event.type == sf::Event::TextEntered)
@@ -235,18 +241,21 @@ public:
 					if (!startedTyping)
 					{
 						startedTyping = 1;
+						
 						inputBoxText.setString("");
 					}
 					if (event.text.unicode == 8 && !inputString.empty())
 					{
 						inputString.pop_back();
 						inputBoxText.setString(inputString);
+						
 						if (warning)
 							warning = 0;
 					}
 					else if (event.text.unicode != 8 && !warning) {
 						inputString += event.text.unicode;
 						inputBoxText.setString(inputString);
+						
 					}
 					if (inputBoxText.getGlobalBounds().width >= WIDTH * 0.59) {
 						char lastChar = inputString.back();
@@ -254,6 +263,7 @@ public:
 						inputString.push_back('\n');
 						inputString.push_back(lastChar);
 						inputBoxText.setString(inputString);
+						
 					}
 					if (inputBoxText.getGlobalBounds().height >= HEIGHT * 0.185)
 					{
@@ -261,7 +271,7 @@ public:
 						warningMessage.setPosition((WIDTH - warningMessage.getGlobalBounds().width) * 0.5, 0);
 						inputString.pop_back();
 						inputBoxText.setString(inputString);
-
+						
 						warning = true;
 
 					}
@@ -281,25 +291,28 @@ public:
 							formula.setString(goodString);
 						}
 					}
+					changed = true;
 				}
 			}
 
 			//-----------------------------------------------
-			//Draw
-			window.clear();
+		
 			if (inputString == "") formula.setString("");
 			if (inputString != "" && !pars.isStringValid(inputString)) warningMessage.setString("Formula este gresita!");
 			else warningMessage.setString("");
-			formulaDraw.printFormula(formula.getString(), window, charSize);
-			window.draw(minusButton);
-			window.draw(minusText);
-			window.draw(plusButton);
-			window.draw(plusText);
-			for (int i = 0;i < 28;i++) { window.draw(buttons[i].bk); window.draw(buttons[i].txt); }
-			window.draw(warningMessage);
-			window.draw(inputBoxFrame);
-			window.draw(inputBoxText);
+			if (changed || !startedTyping) {
+				window.clear();
+				formulaDraw.printFormula(formula.getString(), window, charSize);
+				window.draw(minusButton);
+				window.draw(minusText);
+				window.draw(plusButton);
+				window.draw(plusText);
+				for (int i = 0;i < 28;i++) { window.draw(buttons[i].bk); window.draw(buttons[i].txt); }
+				window.draw(warningMessage);
+				window.draw(inputBoxFrame);
+				window.draw(inputBoxText);
 			//----------------------------------------
+			}
 			window.display();
 		}
 	}
