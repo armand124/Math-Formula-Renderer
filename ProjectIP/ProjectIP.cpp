@@ -30,6 +30,7 @@ private:
 	"5", "6", "-", ")", "cos", "arccos", "7", "8", "9", ",", "ln", "tg", "arctg",
 	"*", "0", "/", "^", "sqrt", "ctg", "arcctg"};
 	float charSize = 40.f;
+	bool light = 0;
 	bool startScreen = true;
 	struct ButtonPair {
 		sf::RectangleShape bk;
@@ -139,6 +140,47 @@ public:
 			plusButton.getPosition().y + (plusButton.getSize().y - plusText.getLocalBounds().height) / 2 - 5
 		);
 		
+		sf::RectangleShape darkmodeButton(sf::Vector2f(40, 20));
+		darkmodeButton.setPosition(WIDTH*0.97, 10);
+		darkmodeButton.setFillColor(sf::Color::White);
+
+		sf::Text darkmodeText;
+		darkmodeText.setString("DARK");
+		darkmodeText.setFont(generalFont);
+		darkmodeText.setCharacterSize(10);
+		darkmodeText.setFillColor(sf::Color::Black);
+		darkmodeText.setPosition(
+			darkmodeButton.getPosition().x + (darkmodeButton.getSize().x - darkmodeText.getLocalBounds().width) / 2,
+			darkmodeButton.getPosition().y + (darkmodeButton.getSize().y - darkmodeText.getLocalBounds().height) / 2 - 5
+		);
+		sf::RectangleShape lightmodeButton(sf::Vector2f(40, 20));
+		lightmodeButton.setPosition(WIDTH*0.97-50, 10);
+		lightmodeButton.setFillColor(sf::Color::White);
+
+		sf::Text lightmodeText;
+		lightmodeText.setString("LIGHT");
+		lightmodeText.setFont(generalFont);
+		lightmodeText.setCharacterSize(10);
+		lightmodeText.setFillColor(sf::Color::Black);
+		lightmodeText.setPosition(
+			lightmodeButton.getPosition().x + (lightmodeButton.getSize().x - lightmodeText.getLocalBounds().width) / 2,
+			lightmodeButton.getPosition().y + (lightmodeButton.getSize().y - lightmodeText.getLocalBounds().height) / 2 - 5
+		);
+
+		sf::RectangleShape backspaceButton(sf::Vector2f(51, 51));
+		backspaceButton.setPosition(WIDTH*0.81, HEIGHT*0.5);
+		backspaceButton.setFillColor(sf::Color::White);
+
+		sf::Text backspaceText;
+		backspaceText.setString("<");
+		backspaceText.setFont(generalFont);
+		backspaceText.setCharacterSize(30);
+		backspaceText.setFillColor(sf::Color::Black);
+		backspaceText.setPosition(
+			backspaceButton.getPosition().x + (backspaceButton.getSize().x - backspaceText.getLocalBounds().width) / 2,
+			backspaceButton.getPosition().y + (backspaceButton.getSize().y - backspaceText.getLocalBounds().height) / 2 - 10
+		);
+
 		ButtonPair buttons[29];
 		int pozx=WIDTH*0.29, pozy=HEIGHT*0.509;
 		for (int i = 0;i < 28;i++)
@@ -179,6 +221,63 @@ public:
 				changed = false;
 				if (event.type == sf::Event::Closed)
 					window.close();
+				if (darkmodeButton.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
+					darkmodeButton.setFillColor(sf::Color::Green);
+					if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+						darkmodeButton.setFillColor(sf::Color::Red);
+						light = 0;
+						backspaceButton.setFillColor(sf::Color::White);
+						backspaceText.setFillColor(sf::Color::Black);
+						formula.setFillColor(sf::Color::White);
+						minusButton.setFillColor(sf::Color::White);
+						minusText.setFillColor(sf::Color::Black);
+						plusButton.setFillColor(sf::Color::White);
+						plusText.setFillColor(sf::Color::Black);
+						lightmodeButton.setFillColor(sf::Color::White);
+						lightmodeText.setFillColor(sf::Color::Black);
+						darkmodeButton.setFillColor(sf::Color::White);
+						darkmodeText.setFillColor(sf::Color::Black);
+						for (int i = 0;i < 28;i++) {
+							buttons[i].bk.setFillColor(sf::Color::White);
+							buttons[i].txt.setFillColor(sf::Color::Black);
+						}
+					}
+				}
+				else {
+						if (light == 1)
+							darkmodeButton.setFillColor(sf::Color::Black);
+						else
+							darkmodeButton.setFillColor(sf::Color::White);
+					}	
+
+				if (lightmodeButton.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
+					lightmodeButton.setFillColor(sf::Color::Green);
+					if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+						lightmodeButton.setFillColor(sf::Color::Red);
+						light = 1;
+						backspaceButton.setFillColor(sf::Color::Black);
+						backspaceText.setFillColor(sf::Color::White);
+						formula.setFillColor(sf::Color::Black);
+						minusButton.setFillColor(sf::Color::Black);
+						minusText.setFillColor(sf::Color::White);
+						plusButton.setFillColor(sf::Color::Black);
+						plusText.setFillColor(sf::Color::White);
+						lightmodeButton.setFillColor(sf::Color::Black);
+						lightmodeText.setFillColor(sf::Color::White);
+						darkmodeButton.setFillColor(sf::Color::Black);
+						darkmodeText.setFillColor(sf::Color::White);
+						for (int i = 0;i < 28;i++) { 
+							buttons[i].bk.setFillColor(sf::Color::Black);
+						buttons[i].txt.setFillColor(sf::Color::White);
+						}
+					}
+				}
+				else {
+					if (light == 1)
+						lightmodeButton.setFillColor(sf::Color::Black);
+					else
+						lightmodeButton.setFillColor(sf::Color::White);
+				}
 				for (int i = 0;i < 28;i++)
 				{
 					if (buttons[i].bk.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition)))
@@ -206,7 +305,10 @@ public:
 					}
 					else
 					{
-						buttons[i].bk.setFillColor(sf::Color::White);
+						if (light == 0)
+							buttons[i].bk.setFillColor(sf::Color::White);
+						else
+							buttons[i].bk.setFillColor(sf::Color::Black);
 					}
 				}
 				if (minusButton.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
@@ -219,11 +321,44 @@ public:
 				}
 				else {
 					changed = true;
-					minusButton.setFillColor(sf::Color::White);
+					if (light == 0)
+						minusButton.setFillColor(sf::Color::White);
+					else
+						minusButton.setFillColor(sf::Color::Black);
+				}
+
+				if (backspaceButton.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
+					backspaceButton.setFillColor(sf::Color::Green);
+					if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+						backspaceButton.setFillColor(sf::Color::Red);
+						if (!inputString.empty()) {
+							inputString.pop_back();
+							inputBoxText.setString(inputString);
+							formula.setString(inputString);
+							changed = true;
+							if (inputString != "") {
+								if (!pars.isStringValid(inputString)) {
+									warningMessage.setString("Formula este gresita!");
+									formula.setString("");
+								}
+								else
+								{
+									std::string goodString = pars.formulaParsedString(inputString);
+									formula.setString(goodString);
+								}
+							}
+						}
+					}
+				}
+				else {
+					if (light == 0)
+						backspaceButton.setFillColor(sf::Color::White);
+					else
+						backspaceButton.setFillColor(sf::Color::Black);
 				}
 
 				if (plusButton.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
-					plusButton.setFillColor(sf::Color::Green); 
+					plusButton.setFillColor(sf::Color::Green);
 					if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
 						plusButton.setFillColor(sf::Color::Red);
 						changed = true;
@@ -232,7 +367,10 @@ public:
 				}
 				else {
 					changed = true;
-					plusButton.setFillColor(sf::Color::White); 
+					if (light == 0)
+						plusButton.setFillColor(sf::Color::White);
+					else
+						plusButton.setFillColor(sf::Color::Black);
 				}
 				if (event.type == sf::Event::TextEntered)
 				{
@@ -301,12 +439,21 @@ public:
 			if (inputString != "" && !pars.isStringValid(inputString)) warningMessage.setString("Formula este gresita!");
 			else warningMessage.setString("");
 			if (changed || !startedTyping) {
-				window.clear();
-				formulaDraw.printFormula(formula.getString(), window, charSize);
+				if (light == 1)
+					window.clear(sf::Color::White);
+				else
+					window.clear(sf::Color::Black);
+				formulaDraw.printFormula(formula.getString(), window, charSize, light);
 				window.draw(minusButton);
 				window.draw(minusText);
 				window.draw(plusButton);
 				window.draw(plusText);
+				window.draw(lightmodeButton);
+				window.draw(lightmodeText);
+				window.draw(darkmodeButton);
+				window.draw(darkmodeText);
+				window.draw(backspaceButton);
+				window.draw(backspaceText);
 				for (int i = 0;i < 28;i++) { window.draw(buttons[i].bk); window.draw(buttons[i].txt); }
 				window.draw(warningMessage);
 				window.draw(inputBoxFrame);

@@ -11,6 +11,7 @@ private:
 	Parser parser;
 	const char multiply = char(183);
 	float characterSize = 40.f;
+	bool lgt = 0;
 	float spacing = characterSize * 0.25f;
 	struct formulaTree {
 		char operation;
@@ -54,7 +55,10 @@ private:
 		sf::Text txt;
 		txt.setFont(mathFont);
 		txt.setCharacterSize(characterSize);
-		txt.setFillColor(sf::Color::White);
+		if (lgt == 0)
+			txt.setFillColor(sf::Color::White);
+		else
+			txt.setFillColor(sf::Color::Black);
 		txt.setString(str);
 		txt.setPosition(0, 0);
 		return txt.getLocalBounds().width;
@@ -64,7 +68,10 @@ private:
 		sf::Text txt;
 		txt.setFont(mathFont);
 		txt.setCharacterSize(characterSize);
-		txt.setFillColor(sf::Color::White);
+		if (lgt == 0)
+			txt.setFillColor(sf::Color::White);
+		else
+			txt.setFillColor(sf::Color::Black);
 		txt.setString(str);
 		txt.setPosition(0, 0);
 		return txt.getLocalBounds().height;
@@ -76,7 +83,10 @@ private:
 		str.push_back(c);
 		txt.setFont(mathFont);
 		txt.setCharacterSize(characterSize);
-		txt.setFillColor(sf::Color::White);
+		if (lgt == 0)
+			txt.setFillColor(sf::Color::White);
+		else
+			txt.setFillColor(sf::Color::Black);
 		txt.setString(str);
 		txt.setPosition(0, 0);
 		return txt.getLocalBounds().width;
@@ -88,7 +98,10 @@ private:
 		str.push_back(p);
 		txt.setFont(mathFont);
 		txt.setCharacterSize(characterSize + height);
-		txt.setFillColor(sf::Color::White);
+		if (lgt == 0)
+			txt.setFillColor(sf::Color::White);
+		else
+			txt.setFillColor(sf::Color::Black);
 		txt.setString(str);
 		txt.setPosition(0, 0);
 		return txt.getLocalBounds().width;
@@ -100,7 +113,10 @@ private:
 		str.push_back(p);
 		txt.setFont(mathFont);
 		txt.setCharacterSize(characterSize + height);
-		txt.setFillColor(sf::Color::White);
+		if (lgt == 0)
+			txt.setFillColor(sf::Color::White);
+		else
+			txt.setFillColor(sf::Color::Black);
 		txt.setString(str);
 		txt.setPosition(0, 0);
 		return txt.getLocalBounds().height;
@@ -201,11 +217,11 @@ private:
 		}
 
 		//Check if there is at least an operator
-		if (addSubIndex == -1 && mulIndex == -1 && powIndex == -1 && divIndex==-1)
+		if (addSubIndex == -1 && mulIndex == -1 && powIndex == -1 && divIndex == -1)
 			return node;
 
 		//Find which operator has the lowest priority and it's location
-		minimumPriority = std::min(std::min(addSubPriority, mulPriority), std::min(powPriority,divPriority));
+		minimumPriority = std::min(std::min(addSubPriority, mulPriority), std::min(powPriority, divPriority));
 
 		int operatorIndex = 0;
 
@@ -296,8 +312,8 @@ private:
 			//Calculate the proportion of the formula within the parantheses
 			buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
 
-			widthPos = node->position.xOperator + getWidthOfParantheses('(', node->leftTree->size.height) 
-				+ getHeightOfParantheses('(', node->leftTree->size.height) *0.15f;
+			widthPos = node->position.xOperator + getWidthOfParantheses('(', node->leftTree->size.height)
+				+ getHeightOfParantheses('(', node->leftTree->size.height) * 0.15f;
 
 			//Recalculate the positions
 			buildFormulaCoordinates(node->leftTree, heightPos, widthPos);
@@ -313,7 +329,7 @@ private:
 			node->size.width = widthPos - node->position.xOperator;
 			node->height.up = node->leftTree->height.up;
 			node->height.down = node->leftTree->height.down;
-			node->size.height = std::abs(node->height.up-node->height.down);
+			node->size.height = std::abs(node->height.up - node->height.down);
 			return;
 		}
 		else if (node->function != "none")
@@ -367,26 +383,32 @@ private:
 		{
 			sf::Text text;
 			text.setCharacterSize(characterSize);
-			text.setFillColor(sf::Color::White);
+			if (lgt == 0)
+				text.setFillColor(sf::Color::White);
+			else
+				text.setFillColor(sf::Color::Black);
 			text.setPosition(node->position.xFormula, node->position.yFormula);
 			text.setFont(mathFont);
 			text.setString(node->formula);
-			
+
 			window->draw(text);
 			return;
 		}
 		else if (node->paranthases)
 		{
 			sf::Text text;
-			text.setCharacterSize(characterSize + node->leftTree->size.height*1.123f);
-			text.setFillColor(sf::Color::White);
+			text.setCharacterSize(characterSize + node->leftTree->size.height * 1.123f);
+			if (lgt == 0)
+				text.setFillColor(sf::Color::White);
+			else
+				text.setFillColor(sf::Color::Black);
 			text.setPosition(node->position.xOperator, node->position.yOperator);
 			text.setFont(parFont);
 			text.setString("(");
 			window->draw(text);
 			drawFormula(node->leftTree);
 			text.setString(")");
-			text.setPosition(node->position.xOperator + node->leftTree->size.width + getHeightOfParantheses(')', node->leftTree->size.height) * 0.15f 
+			text.setPosition(node->position.xOperator + node->leftTree->size.width + getHeightOfParantheses(')', node->leftTree->size.height) * 0.15f
 				+ getWidthOfParantheses(')', node->leftTree->size.height) * 0.609 + int(characterSize * 3 / getWidthOfParantheses(')', node->leftTree->size.height)), node->position.yOperator);
 			window->draw(text);
 			return;
@@ -401,8 +423,10 @@ private:
 			else {
 				sf::Text text;
 				text.setCharacterSize(characterSize);
-				
-				text.setFillColor(sf::Color::White);
+				if (lgt == 0)
+					text.setFillColor(sf::Color::White);
+				else
+					text.setFillColor(sf::Color::Black);
 				text.setPosition(node->position.xOperator, node->position.yOperator);
 				text.setFont(mathFont);
 				text.setString(node->function);
@@ -421,7 +445,10 @@ private:
 			drawFormula(node->leftTree);
 			sf::RectangleShape line(sf::Vector2f(node->size.width, characterSize * 0.04f));
 			line.setPosition(node->position.xOperator, node->position.yOperator);
-			line.setFillColor(sf::Color::White);
+			if (lgt == 0)
+				line.setFillColor(sf::Color::White);
+			else
+				line.setFillColor(sf::Color::Black);
 			window->draw(line);
 			drawFormula(node->rightTree);
 		}
@@ -429,14 +456,17 @@ private:
 		{
 			sf::Text text;
 			text.setCharacterSize(characterSize);
-			text.setFillColor(sf::Color::White);
+			if(lgt==1)
+				text.setFillColor(sf::Color::Black);
+			else
+				text.setFillColor(sf::Color::White);
 			text.setPosition(node->position.xOperator, node->position.yOperator);
 			text.setFont(mathFont);
 			std::string s; s.push_back(node->operation);
 			text.setString(s);
 			drawFormula(node->leftTree);
 			window->draw(text);
-			
+
 			drawFormula(node->rightTree);
 		}
 
@@ -451,10 +481,11 @@ public:
 		if (!parFont.loadFromFile("assets/fontParanteze.ttf")) exit(1);
 	}
 
-	void printFormula(std::string str, sf::RenderWindow& screen,float charSize)
+	void printFormula(std::string str, sf::RenderWindow& screen, float charSize, bool light)
 	{
 		formulaTree* root = buildTree(str);
 		characterSize = charSize;
+		lgt = light;
 		float x = 0;
 		buildFormulaCoordinates(root, 0, x);
 		float xOffset = (screen.getSize().x - root->size.width) * 0.5f;
