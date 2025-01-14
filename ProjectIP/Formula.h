@@ -249,7 +249,7 @@ private:
 			node->height.up = heightPos;
 			node->height.down = heightPos;
 			node->size.width = getWidthOfString(node->formula);
-			node->size.height = getHeightOfString(node->formula);
+			node->size.height = 0;
 			widthPos += getWidthOfString(node->formula);
 			return;
 		}
@@ -292,11 +292,11 @@ private:
 			float savedWidthPos = widthPos;
 
 			//Calculate the proportion of the exponent
-			buildFormulaCoordinates(node->rightTree, heightPos - characterSize, widthPos);
+			buildFormulaCoordinates(node->rightTree, heightPos - characterSize*0.7, widthPos);
 			widthPos = savedWidthPos;
 
 			//Recalculate the position depending on the size of the exponent
-			buildFormulaCoordinates(node->rightTree, (heightPos - characterSize) * 2 - node->rightTree->height.down - node->leftTree->size.height, widthPos);
+			buildFormulaCoordinates(node->rightTree, (heightPos - characterSize*0.7) * 2 - node->rightTree->height.down - node->leftTree->size.height, widthPos);
 
 			//Save the information of the current formula
 			node->height.up = node->rightTree->height.up;
@@ -397,7 +397,7 @@ private:
 		else if (node->paranthases)
 		{
 			sf::Text text;
-			text.setCharacterSize(characterSize + node->leftTree->size.height * 1.123f);
+			text.setCharacterSize(characterSize + node->leftTree->size.height * 1.2f);
 			if (lgt == 0)
 				text.setFillColor(sf::Color::White);
 			else

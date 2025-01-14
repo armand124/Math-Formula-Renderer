@@ -443,7 +443,7 @@ public:
 					window.clear(sf::Color::White);
 				else
 					window.clear(sf::Color::Black);
-				formulaDraw.printFormula(formula.getString(), window, charSize, light);
+				formulaDraw.printFormula(formula.getString(), window, charSize,light);
 				window.draw(minusButton);
 				window.draw(minusText);
 				window.draw(plusButton);

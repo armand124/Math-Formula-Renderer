@@ -168,6 +168,8 @@ class Parser {
 				if (s[i] == ')' && s[i - 1] == '(') return false;
 				if (s[i] == ',') virgula++;
 				else if(!isdigit(s[i])) virgula = std::max(0, virgula - 1);
+
+			
 				i++;
 			}
 			
