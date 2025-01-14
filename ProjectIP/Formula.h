@@ -132,7 +132,10 @@ private:
 
 		// Set the color for the square root symbol
 		for (size_t i = 0; i < squareRoot.getVertexCount(); ++i) {
-			squareRoot[i].color = sf::Color::White;
+			if(lgt)
+				squareRoot[i].color = sf::Color::Black;
+			else
+				squareRoot[i].color = sf::Color::White;
 		}
 
 		// Draw the square root symbol on the window
