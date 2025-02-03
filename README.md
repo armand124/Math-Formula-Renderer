@@ -17,4 +17,6 @@ This is a C++ project using SFML that takes a string input and converts it into 
 2. Compile the project using a C++ compiler  
 3. Run the executable and enter a mathematical expression  
 
-
+## Screenshots
+![Formula Renderer Screenshot Dark Theme](screenshots/1.png)
+![Formula Renderer Screenshot Light Theme](screenshots/2.png)
