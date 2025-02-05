@@ -5,7 +5,6 @@ This is a C++ project using SFML that takes a string input and converts it into 
 ## Technologies Used  
 - **C++** for logic and structure  
 - **SFML** for graphics and rendering  
-- **Binary Tree** for parsing and storing the formula components  
 
 ##  Features  
 - Takes user input as a string  
